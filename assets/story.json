@@ -1,0 +1,157 @@
+{
+  "intro_subtitle": "Everything is quiet. Just scattered pieces. Maybe if I put them in order...",
+  "outro_trigger_chain": [
+    "first_coffee",
+    "late_text",
+    "moving_in",
+    "deleted_texts",
+    "isolated_friends",
+    "the_proposal",
+    "fake_apology",
+    "locked_door",
+    "the_argument",
+    "broken_mug"
+  ],
+  "outro_subtitle": "It wasn't love. It was a cage I helped build. Sever the chains. Let it go.",
+  "nodes": [
+    {
+      "id": "first_coffee",
+      "text": "The café on 4th Street. You laughed so hard you spilled your drink.",
+      "starts_visible": true,
+      "outgoing": {
+        "moving_in": {
+          "subtitle": "Everything felt effortless back then. Like we'd known each other forever.",
+          "tone": "warm",
+          "spawns": ["late_text"]
+        },
+        "late_text": {
+          "subtitle": "Wait... why did I check my phone three times before you even arrived?",
+          "tone": "uneasy",
+          "spawns": ["deleted_texts"]
+        }
+      }
+    },
+    {
+      "id": "late_text",
+      "text": "'Where are you? You said you'd be home ten minutes ago.'",
+      "starts_visible": false,
+      "outgoing": {
+        "moving_in": {
+          "subtitle": "It was just concern. You kept telling yourself that's what love looks like.",
+          "tone": "uneasy",
+          "spawns": []
+        }
+      }
+    },
+    {
+      "id": "moving_in",
+      "text": "Two suitcases by the door. 'We'll never need anyone else,' you said.",
+      "starts_visible": true,
+      "outgoing": {
+        "the_proposal": {
+          "subtitle": "Us against the world. It sounded romantic when you first said it.",
+          "tone": "warm",
+          "spawns": ["deleted_texts", "fake_apology"]
+        },
+        "deleted_texts": {
+          "subtitle": "The apartment got smaller every week. Even the air felt watched.",
+          "tone": "uneasy",
+          "spawns": ["isolated_friends"]
+        }
+      }
+    },
+    {
+      "id": "deleted_texts",
+      "text": "Your phone facedown on the counter. Notifications turned off.",
+      "starts_visible": false,
+      "outgoing": {
+        "the_proposal": {
+          "subtitle": "You stopped explaining where you were. Easier than starting another fight.",
+          "tone": "uneasy",
+          "spawns": ["fake_apology"]
+        },
+        "isolated_friends": {
+          "subtitle": "One by one, the group chats went quiet. You didn't notice until they were gone.",
+          "tone": "bitter",
+          "spawns": []
+        }
+      }
+    },
+    {
+      "id": "isolated_friends",
+      "text": "'They don't really care about you like I do. Stop answering them.'",
+      "starts_visible": false,
+      "outgoing": {
+        "the_proposal": {
+          "subtitle": "When everyone else was gone, your approval was the only light left in the room.",
+          "tone": "bitter",
+          "spawns": ["fake_apology"]
+        }
+      }
+    },
+    {
+      "id": "the_proposal",
+      "text": "A quiet Sunday morning. A ring box on the kitchen table.",
+      "starts_visible": true,
+      "outgoing": {
+        "the_argument": {
+          "subtitle": "A promise that everything would finally calm down. That we'd be safe.",
+          "tone": "warm",
+          "spawns": ["locked_door", "isolated_friends"]
+        },
+        "fake_apology": {
+          "subtitle": "The ring came the morning after the worst night. Like a receipt for my forgiveness.",
+          "tone": "bitter",
+          "spawns": ["locked_door"]
+        }
+      }
+    },
+    {
+      "id": "fake_apology",
+      "text": "'I only got angry because I love you too much. Don't make me do it again.'",
+      "starts_visible": false,
+      "outgoing": {
+        "the_argument": {
+          "subtitle": "Somehow, every apology ended with me promising to be better.",
+          "tone": "uneasy",
+          "spawns": ["locked_door"]
+        },
+        "locked_door": {
+          "subtitle": "The apologies stopped sounding sorry. They started sounding like warnings.",
+          "tone": "bitter",
+          "spawns": ["broken_mug"]
+        }
+      }
+    },
+    {
+      "id": "locked_door",
+      "text": "The bedroom latch clicking from the outside. 'Calm down first.'",
+      "starts_visible": false,
+      "outgoing": {
+        "the_argument": {
+          "subtitle": "You called it giving me space. I sat against the doorframe until my knees went numb.",
+          "tone": "bitter",
+          "spawns": ["broken_mug"]
+        }
+      }
+    },
+    {
+      "id": "the_argument",
+      "text": "The plates by the sink. Silence that lasted three whole days.",
+      "starts_visible": true,
+      "outgoing": {
+        "broken_mug": {
+          "subtitle": "I finally stopped flinching. That was the night I packed my bag.",
+          "tone": "bitter",
+          "spawns": []
+        }
+      }
+    },
+    {
+      "id": "broken_mug",
+      "text": "Ceramic shards on the tile. You apologized for being in the way.",
+      "starts_visible": false,
+      "outgoing": {}
+    }
+  ]
+}
