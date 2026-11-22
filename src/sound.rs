@@ -29,8 +29,8 @@ pub enum LoadedAudio {
   Music(MusicTrack, Sound),
 }
 
-const BASE_MUSIC_VOL: f32 = 0.45;
-const DUCK_LEVEL: f32 = 0.65;
+const BASE_MUSIC_VOL: f32 = 0.28;
+const DUCK_LEVEL: f32 = 0.20;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum MusicTrack {
@@ -90,7 +90,7 @@ impl MusicManager {
     }
 
     let target_duck = if vo_playing { DUCK_LEVEL } else { 1.0 };
-    let duck_rate = if vo_playing { 2.5 } else { 0.85 };
+    let duck_rate = if vo_playing { 5.0 } else { 1.2 };
     if self.duck_mult < target_duck {
       self.duck_mult = (self.duck_mult + duck_rate * dt).min(target_duck);
     } else if self.duck_mult > target_duck {

@@ -226,7 +226,7 @@
       }
     },
     "stopped_fighting_bed": {
-      "text": "{color=#7E2D2D|He} {color=#991B1B|didn't stop} until I quit fighting and just {color=#3730A3|lay still} on the bed.",
+      "text": "{color=#7E2D2D|He} {color=#991B1B|didn't stop} until I quit fighting and just {color=#3730A3|laid still} on the bed.",
       "is_clean": false,
       "outgoing": {
         "hot_chocolate_in_bed": "",
@@ -375,7 +375,7 @@
       }
     },
     "awake_left_morning": {
-      "text": "I lay {color=#3730A3|awake} all night. Once {color=#991B1B|he} left for work, I {color=#0369A1|packed} a bag and called {color=#0F766E|Claire} from the main road.",
+      "text": "I laid {color=#3730A3|awake} all night. Once {color=#991B1B|he} left for work, I {color=#0369A1|packed} a bag and called {color=#0F766E|Claire} from the main road.",
       "is_clean": false,
       "outgoing": {
         "river_walk_call": ""
