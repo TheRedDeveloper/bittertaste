@@ -1,157 +1,596 @@
 {
-  "intro_subtitle": "Everything is quiet. Just scattered pieces. Maybe if I put them in order...",
-  "outro_trigger_chain": [
-    "first_coffee",
-    "late_text",
-    "moving_in",
-    "deleted_texts",
-    "isolated_friends",
-    "the_proposal",
-    "fake_apology",
-    "locked_door",
-    "the_argument",
-    "broken_mug"
+  "intro_subtitle": "Let me just start from the beginning...",
+  "starting_nodes": [
+    "cafe_shifts",
+    "cramped_apartment",
+    "daniel_regular",
+    "missed_last_bus"
   ],
-  "outro_subtitle": "It wasn't love. It was a cage I helped build. Sever the chains. Let it go.",
-  "nodes": [
-    {
-      "id": "first_coffee",
-      "text": "The café on 4th Street. You laughed so hard you spilled your drink.",
-      "starts_visible": true,
+  "outro_trigger_chain": [
+    [
+      "cafe_shifts",
+      "cramped_apartment"
+    ],
+    "daniel_regular",
+    "missed_last_bus",
+    "first_ride_home",
+    "night_pickups",
+    "insisted_on_rides",
+    "weekend_hugs",
+    "moved_in_together",
+    "no_rent_insistence",
+    [
+      "quit_cafe_rest",
+      "pushed_to_quit"
+    ],
+    "stuck_alone_indoors",
+    "drifted_from_claire",
+    "called_claire_toxic",
+    "reading_my_texts",
+    "blocked_bedroom_door",
+    "warm_after_canceling",
+    "owed_him_sex",
+    "pinned_and_bruised",
+    "stopped_fighting_bed",
+    "hot_chocolate_in_bed",
+    "moved_out_of_town",
+    "no_bus_only_his_car",
+    "phone_repair_offer",
+    "two_days_to_fix",
+    "secret_job_apply",
+    "found_out_yelled",
+    "withdrew_apologized",
+    "restaurant_proposal",
+    "forced_yes_in_public",
+    "city_parents_dinner",
+    "claire_grocery_runin",
+    "never_sent_that_text",
+    "fingers_digging_side",
+    "claire_saw_bruises",
+    "acted_normal_drive",
+    "counter_mugs_hug",
+    "bitter_sip_stomach",
+    "awake_left_morning",
+    "river_walk_call",
+    "always_know_where",
+    "threw_phone_in_river"
+  ],
+  "outro_subtitle": "What a piece of shit!",
+  "nodes": {
+    "cafe_shifts": {
+      "text": "I worked closing shifts at a café until 9:30 PM and took the bus everywhere because I couldn't afford a car.",
+      "is_clean": true,
       "outgoing": {
-        "moving_in": {
-          "subtitle": "Everything felt effortless back then. Like we'd known each other forever.",
-          "tone": "warm",
-          "spawns": ["late_text"]
-        },
-        "late_text": {
-          "subtitle": "Wait... why did I check my phone three times before you even arrived?",
-          "tone": "uneasy",
-          "spawns": ["deleted_texts"]
-        }
+        "cramped_apartment": "",
+        "daniel_regular": ""
       }
     },
-    {
-      "id": "late_text",
-      "text": "'Where are you? You said you'd be home ten minutes ago.'",
-      "starts_visible": false,
+    "cramped_apartment": {
+      "text": "My roommate was always late on rent in our cramped apartment, and I vented most nights to Claire.",
+      "is_clean": true,
       "outgoing": {
-        "moving_in": {
-          "subtitle": "It was just concern. You kept telling yourself that's what love looks like.",
-          "tone": "uneasy",
-          "spawns": []
-        }
+        "cafe_shifts": "",
+        "daniel_regular": ""
       }
     },
-    {
-      "id": "moving_in",
-      "text": "Two suitcases by the door. 'We'll never need anyone else,' you said.",
-      "starts_visible": true,
+    "daniel_regular": {
+      "text": "Daniel worked late nearby and stopped in at 9:15 for hot chocolate. We knew each other from small talk at the counter.",
+      "is_clean": true,
       "outgoing": {
-        "the_proposal": {
-          "subtitle": "Us against the world. It sounded romantic when you first said it.",
-          "tone": "warm",
-          "spawns": ["deleted_texts", "fake_apology"]
-        },
-        "deleted_texts": {
-          "subtitle": "The apartment got smaller every week. Even the air felt watched.",
-          "tone": "uneasy",
-          "spawns": ["isolated_friends"]
-        }
+        "missed_last_bus": ""
       }
     },
-    {
-      "id": "deleted_texts",
-      "text": "Your phone facedown on the counter. Notifications turned off.",
-      "starts_visible": false,
+    "missed_last_bus": {
+      "text": "One freezing, rainy night, closing ran ten minutes late and I missed the last bus with no cash for a cab.",
+      "is_clean": true,
       "outgoing": {
-        "the_proposal": {
-          "subtitle": "You stopped explaining where you were. Easier than starting another fight.",
-          "tone": "uneasy",
-          "spawns": ["fake_apology"]
-        },
-        "isolated_friends": {
-          "subtitle": "One by one, the group chats went quiet. You didn't notice until they were gone.",
-          "tone": "bitter",
-          "spawns": []
-        }
+        "first_ride_home": ""
       }
     },
-    {
-      "id": "isolated_friends",
-      "text": "'They don't really care about you like I do. Stop answering them.'",
-      "starts_visible": false,
+    "first_ride_home": {
+      "text": "Daniel pulled out of the lot, saw me shivering under the streetlight, and offered a ride since it was on his way.",
+      "is_clean": true,
       "outgoing": {
-        "the_proposal": {
-          "subtitle": "When everyone else was gone, your approval was the only light left in the room.",
-          "tone": "bitter",
-          "spawns": ["fake_apology"]
-        }
+        "night_pickups": "",
+        "weekend_hugs": ""
       }
     },
-    {
-      "id": "the_proposal",
-      "text": "A quiet Sunday morning. A ring box on the kitchen table.",
-      "starts_visible": true,
+    "night_pickups": {
+      "text": "He started showing up at 9:25 with hot chocolate in the cupholder so I wouldn't freeze at the bus stop.",
+      "is_clean": true,
       "outgoing": {
-        "the_argument": {
-          "subtitle": "A promise that everything would finally calm down. That we'd be safe.",
-          "tone": "warm",
-          "spawns": ["locked_door", "isolated_friends"]
-        },
-        "fake_apology": {
-          "subtitle": "The ring came the morning after the worst night. Like a receipt for my forgiveness.",
-          "tone": "bitter",
-          "spawns": ["locked_door"]
-        }
+        "insisted_on_rides": "",
+        "weekend_hugs": "Everything felt so easy back then. Like someone was finally looking out for me."
       }
     },
-    {
-      "id": "fake_apology",
-      "text": "'I only got angry because I love you too much. Don't make me do it again.'",
-      "starts_visible": false,
+    "insisted_on_rides": {
+      "text": "When I told him I wanted to walk or take the bus, he wouldn't leave the lot until I got in the car.",
+      "is_clean": false,
       "outgoing": {
-        "the_argument": {
-          "subtitle": "Somehow, every apology ended with me promising to be better.",
-          "tone": "uneasy",
-          "spawns": ["locked_door"]
-        },
-        "locked_door": {
-          "subtitle": "The apologies stopped sounding sorry. They started sounding like warnings.",
-          "tone": "bitter",
-          "spawns": ["broken_mug"]
-        }
+        "weekend_hugs": "",
+        "moved_in_together": ""
       }
     },
-    {
-      "id": "locked_door",
-      "text": "The bedroom latch clicking from the outside. 'Calm down first.'",
-      "starts_visible": false,
+    "weekend_hugs": {
+      "text": "We started spending weekends together. He always met me at the door with a long, warm hug.",
+      "is_clean": true,
       "outgoing": {
-        "the_argument": {
-          "subtitle": "You called it giving me space. I sat against the doorframe until my knees went numb.",
-          "tone": "bitter",
-          "spawns": ["broken_mug"]
-        }
+        "moved_in_together": "",
+        "quit_cafe_rest": "Wait... how was I paying rent if I hadn't moved in yet?"
       }
     },
-    {
-      "id": "the_argument",
-      "text": "The plates by the sink. Silence that lasted three whole days.",
-      "starts_visible": true,
+    "moved_in_together": {
+      "text": "When my roommate moved out and rent spiked, Daniel offered to let me move into his apartment.",
+      "is_clean": true,
       "outgoing": {
-        "broken_mug": {
-          "subtitle": "I finally stopped flinching. That was the night I packed my bag.",
-          "tone": "bitter",
-          "spawns": []
-        }
+        "no_rent_insistence": "",
+        "quit_cafe_rest": "",
+        "pushed_to_quit": "",
+        "drifted_from_claire": ""
       }
     },
-    {
-      "id": "broken_mug",
-      "text": "Ceramic shards on the tile. You apologized for being in the way.",
-      "starts_visible": false,
+    "no_rent_insistence": {
+      "text": "Even when I offered to split costs, he insisted I didn't need to pay a dime of rent.",
+      "is_clean": false,
+      "outgoing": {
+        "quit_cafe_rest": "",
+        "pushed_to_quit": ""
+      }
+    },
+    "quit_cafe_rest": {
+      "text": "I quit those exhausting late shifts at the café, and Daniel covered the bills without hesitation so I could finally rest.",
+      "is_clean": true,
+      "outgoing": {
+        "pushed_to_quit": "I really didn't have to.",
+        "stuck_alone_indoors": "",
+        "drifted_from_claire": ""
+      }
+    },
+    "pushed_to_quit": {
+      "text": "He kept pushing me to quit the café, saying it was ridiculous for me to work nights when he could pay for everything.",
+      "is_clean": false,
+      "outgoing": {
+        "quit_cafe_rest": "",
+        "stuck_alone_indoors": "",
+        "drifted_from_claire": ""
+      }
+    },
+    "stuck_alone_indoors": {
+      "text": "With no job and no car, I spent most of my days alone inside his apartment.",
+      "is_clean": false,
+      "outgoing": {
+        "drifted_from_claire": "",
+        "reading_my_texts": "",
+        "moved_out_of_town": ""
+      }
+    },
+    "drifted_from_claire": {
+      "text": "Life got busy, and Claire and I slowly lost touch.",
+      "is_clean": true,
+      "outgoing": {
+        "called_claire_toxic": "I really agreed with him...",
+        "reading_my_texts": "",
+        "moved_out_of_town": "Those months are kind of a blur..."
+      }
+    },
+    "called_claire_toxic": {
+      "text": "Daniel kept calling Claire toxic and draining until I agreed out loud that I was better off without her.",
+      "is_clean": false,
+      "outgoing": {
+        "reading_my_texts": "",
+        "blocked_bedroom_door": "",
+        "moved_out_of_town": ""
+      }
+    },
+    "reading_my_texts": {
+      "text": "He was reading my texts over my shoulder and questioning why I replied to anyone.",
+      "is_clean": false,
+      "outgoing": {
+        "blocked_bedroom_door": "",
+        "owed_him_sex": "",
+        "moved_out_of_town": ""
+      }
+    },
+    "blocked_bedroom_door": {
+      "text": "When I tried to go out anyway, he blocked the bedroom door until I apologized for being ungrateful.",
+      "is_clean": false,
+      "outgoing": {
+        "warm_after_canceling": "",
+        "owed_him_sex": "",
+        "moved_out_of_town": ""
+      }
+    },
+    "warm_after_canceling": {
+      "text": "The moment I canceled my plans and said sorry, he turned warm again.",
+      "is_clean": false,
+      "outgoing": {
+        "owed_him_sex": "I really don't want to think about this...",
+        "moved_out_of_town": ""
+      }
+    },
+    "owed_him_sex": {
+      "text": "Sex became something he was treating like I owed him.",
+      "is_clean": false,
+      "outgoing": {
+        "pinned_and_bruised": "",
+        "moved_out_of_town": ""
+      }
+    },
+    "pinned_and_bruised": {
+      "text": "When I said I was tired or pushed him off, he pinned my wrists and gripped my arms until they bruised.",
+      "is_clean": false,
+      "outgoing": {
+        "stopped_fighting_bed": "",
+        "hot_chocolate_in_bed": "",
+        "moved_out_of_town": ""
+      }
+    },
+    "stopped_fighting_bed": {
+      "text": "He didn't stop until I quit fighting and just lay still on the bed.",
+      "is_clean": false,
+      "outgoing": {
+        "hot_chocolate_in_bed": "",
+        "moved_out_of_town": ""
+      }
+    },
+    "hot_chocolate_in_bed": {
+      "text": "He brought hot chocolate to bed, stroked my hair, and said he only did it out of love.",
+      "is_clean": false,
+      "outgoing": {
+        "moved_out_of_town": "Was I really just overreacting?"
+      }
+    },
+    "moved_out_of_town": {
+      "text": "To get out of the city noise, we moved into a quieter apartment further out of town.",
+      "is_clean": true,
+      "outgoing": {
+        "no_bus_only_his_car": "",
+        "phone_repair_offer": "",
+        "restaurant_proposal": ""
+      }
+    },
+    "no_bus_only_his_car": {
+      "text": "Out there, there were no bus lines and only his car, so if I wanted to leave, Daniel had to drive me.",
+      "is_clean": false,
+      "outgoing": {
+        "phone_repair_offer": "",
+        "secret_job_apply": "",
+        "restaurant_proposal": ""
+      }
+    },
+    "phone_repair_offer": {
+      "text": "When my phone broke, Daniel took it to a repair shop so I wouldn't have to worry.",
+      "is_clean": true,
+      "outgoing": {
+        "two_days_to_fix": "Two days for a cracked screen... I never even questioned why it took so long.",
+        "secret_job_apply": "",
+        "restaurant_proposal": "",
+        "city_parents_dinner": ""
+      }
+    },
+    "two_days_to_fix": {
+      "text": "It took him two whole days to \"get it fixed.\"",
+      "is_clean": false,
+      "outgoing": {
+        "secret_job_apply": "",
+        "restaurant_proposal": ""
+      }
+    },
+    "secret_job_apply": {
+      "text": "I secretly applied for a part-time job on my phone while he was at work.",
+      "is_clean": false,
+      "outgoing": {
+        "found_out_yelled": "",
+        "restaurant_proposal": ""
+      }
+    },
+    "found_out_yelled": {
+      "text": "Daniel found out about the application without me telling him. He yelled that I didn't trust him and refused to drive me.",
+      "is_clean": false,
+      "outgoing": {
+        "withdrew_apologized": "",
+        "restaurant_proposal": ""
+      }
+    },
+    "withdrew_apologized": {
+      "text": "I withdrew the application and apologized, feeling guilty for being ungrateful after all he'd done.",
+      "is_clean": false,
+      "outgoing": {
+        "restaurant_proposal": ""
+      }
+    },
+    "restaurant_proposal": {
+      "text": "He took me out to an expensive restaurant and got down on one knee with a ring. Of course I said yes.",
+      "is_clean": true,
+      "outgoing": {
+        "forced_yes_in_public": "What else would I have done?",
+        "city_parents_dinner": ""
+      }
+    },
+    "forced_yes_in_public": {
+      "text": "The restaurant was packed and every table was watching when he asked. I forced myself to say yes in front of them.",
+      "is_clean": false,
+      "outgoing": {
+        "city_parents_dinner": ""
+      }
+    },
+    "city_parents_dinner": {
+      "text": "We drove back into the city for dinner with his parents and stopped at a store for wine and flowers.",
+      "is_clean": true,
+      "outgoing": {
+        "restaurant_proposal": "No, wait... I was already wearing the ring at that dinner.",
+        "claire_grocery_runin": ""
+      }
+    },
+    "claire_grocery_runin": {
+      "text": "Inside the grocery store, we ran into Claire. She asked why I texted months ago to end our friendship.",
+      "is_clean": true,
+      "outgoing": {
+        "never_sent_that_text": ""
+      }
+    },
+    "never_sent_that_text": {
+      "text": "My stomach dropped because I never sent that text. Daniel smiled and told her I was just overwhelmed with wedding planning.",
+      "is_clean": false,
+      "outgoing": {
+        "fingers_digging_side": "",
+        "claire_saw_bruises": "",
+        "acted_normal_drive": ""
+      }
+    },
+    "fingers_digging_side": {
+      "text": "His arm wrapped around my waist, fingers digging into my side to keep me quiet.",
+      "is_clean": false,
+      "outgoing": {
+        "claire_saw_bruises": "",
+        "acted_normal_drive": ""
+      }
+    },
+    "claire_saw_bruises": {
+      "text": "Through my sleeve, I saw Claire staring down at the faded bruises on my wrist.",
+      "is_clean": false,
+      "outgoing": {
+        "acted_normal_drive": ""
+      }
+    },
+    "acted_normal_drive": {
+      "text": "On the drive back to the apartment, Daniel acted like nothing had happened.",
+      "is_clean": false,
+      "outgoing": {
+        "counter_mugs_hug": ""
+      }
+    },
+    "counter_mugs_hug": {
+      "text": "He set two mugs of hot chocolate on the counter and pulled me into a hug.",
+      "is_clean": false,
+      "outgoing": {
+        "bitter_sip_stomach": ""
+      }
+    },
+    "bitter_sip_stomach": {
+      "text": "Slipping out of his arms, I took a sip, and the sweet chocolate tasted so bitter my stomach turned.",
+      "is_clean": false,
+      "outgoing": {
+        "awake_left_morning": ""
+      }
+    },
+    "awake_left_morning": {
+      "text": "I lay awake all night. Once he left for work, I packed a bag and called Claire from the main road.",
+      "is_clean": false,
+      "outgoing": {
+        "river_walk_call": ""
+      }
+    },
+    "river_walk_call": {
+      "text": "While Claire and I walk along the river near her place, Daniel calls.",
+      "is_clean": false,
+      "outgoing": {
+        "always_know_where": ""
+      }
+    },
+    "always_know_where": {
+      "text": "His calm act vanishes: \"I know you called Claire. I always know where you are.\"",
+      "is_clean": false,
+      "outgoing": {
+        "threw_phone_in_river": ""
+      }
+    },
+    "threw_phone_in_river": {
+      "text": "I tell him to go to hell, hang up, and throw the phone straight into the river so he can never trace me.",
+      "is_clean": false,
       "outgoing": {}
+    }
+  },
+  "triggers": [
+    {
+      "when_same_chain": [
+        "cafe_shifts",
+        "cramped_apartment",
+        "daniel_regular",
+        "missed_last_bus"
+      ],
+      "spawns": [
+        "first_ride_home",
+        "night_pickups",
+        "weekend_hugs",
+        "moved_in_together"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "missed_last_bus",
+        "first_ride_home",
+        "night_pickups",
+        "weekend_hugs",
+        "moved_in_together"
+      ],
+      "spawns": [
+        "quit_cafe_rest",
+        "drifted_from_claire",
+        "moved_out_of_town",
+        "phone_repair_offer"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "moved_in_together",
+        "quit_cafe_rest",
+        "drifted_from_claire",
+        "moved_out_of_town",
+        "phone_repair_offer"
+      ],
+      "spawns": [
+        "restaurant_proposal",
+        "city_parents_dinner",
+        "claire_grocery_runin"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "cafe_shifts",
+        "cramped_apartment",
+        "first_ride_home",
+        "moved_in_together",
+        "quit_cafe_rest",
+        "drifted_from_claire",
+        "moved_out_of_town",
+        "phone_repair_offer",
+        "restaurant_proposal",
+        "city_parents_dinner",
+        "claire_grocery_runin"
+      ],
+      "spawns": [
+        "claire_saw_bruises",
+        "insisted_on_rides",
+        "no_rent_insistence",
+        "pushed_to_quit"
+      ],
+      "subtitle": "Wait... what text?"
+    },
+    {
+      "when_same_chain": [
+        "insisted_on_rides",
+        "no_rent_insistence",
+        "pushed_to_quit"
+      ],
+      "spawns": [
+        "stuck_alone_indoors",
+        "called_claire_toxic",
+        "reading_my_texts",
+        "blocked_bedroom_door"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "stuck_alone_indoors",
+        "called_claire_toxic",
+        "reading_my_texts",
+        "blocked_bedroom_door"
+      ],
+      "spawns": [
+        "warm_after_canceling",
+        "owed_him_sex",
+        "pinned_and_bruised",
+        "stopped_fighting_bed"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "warm_after_canceling",
+        "owed_him_sex",
+        "pinned_and_bruised",
+        "stopped_fighting_bed"
+      ],
+      "spawns": [
+        "hot_chocolate_in_bed",
+        "no_bus_only_his_car",
+        "two_days_to_fix",
+        "secret_job_apply"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "hot_chocolate_in_bed",
+        "no_bus_only_his_car",
+        "two_days_to_fix",
+        "secret_job_apply"
+      ],
+      "spawns": [
+        "found_out_yelled",
+        "withdrew_apologized",
+        "forced_yes_in_public"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "found_out_yelled",
+        "withdrew_apologized",
+        "forced_yes_in_public"
+      ],
+      "spawns": [
+        "never_sent_that_text",
+        "fingers_digging_side",
+        "bitter_sip_stomach"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "cafe_shifts",
+        "cramped_apartment",
+        "daniel_regular",
+        "missed_last_bus",
+        "first_ride_home",
+        "night_pickups",
+        "insisted_on_rides",
+        "weekend_hugs",
+        "moved_in_together",
+        "no_rent_insistence",
+        "quit_cafe_rest",
+        "pushed_to_quit",
+        "stuck_alone_indoors",
+        "drifted_from_claire",
+        "called_claire_toxic",
+        "reading_my_texts",
+        "blocked_bedroom_door",
+        "warm_after_canceling",
+        "owed_him_sex",
+        "pinned_and_bruised",
+        "stopped_fighting_bed",
+        "hot_chocolate_in_bed",
+        "moved_out_of_town",
+        "no_bus_only_his_car",
+        "phone_repair_offer",
+        "two_days_to_fix",
+        "secret_job_apply",
+        "found_out_yelled",
+        "withdrew_apologized",
+        "restaurant_proposal",
+        "forced_yes_in_public",
+        "city_parents_dinner",
+        "claire_grocery_runin",
+        "never_sent_that_text",
+        "fingers_digging_side",
+        "claire_saw_bruises"
+      ],
+      "spawns": [
+        "acted_normal_drive",
+        "counter_mugs_hug",
+        "awake_left_morning"
+      ]
+    },
+    {
+      "when_same_chain": [
+        "cafe_shifts",
+        "acted_normal_drive",
+        "counter_mugs_hug",
+        "bitter_sip_stomach",
+        "awake_left_morning"
+      ],
+      "spawns": [
+        "river_walk_call",
+        "always_know_where",
+        "threw_phone_in_river"
+      ]
     }
   ]
 }

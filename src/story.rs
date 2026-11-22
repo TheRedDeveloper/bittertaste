@@ -2,28 +2,37 @@ use serde::Deserialize;
 use std::collections::HashMap;
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct StoryData {
-  pub intro_subtitle: String,
-  pub outro_trigger_chain: Vec<String>,
-  pub outro_subtitle: String,
-  pub nodes: Vec<MemoryNodeDef>,
+#[serde(untagged)]
+pub enum ChainStep {
+  Single(String),
+  AnyOrder(Vec<String>),
 }
 
 #[derive(Deserialize, Clone, Debug)]
 pub struct MemoryNodeDef {
-  pub id: String,
   pub text: String,
-  pub starts_visible: bool,
-  pub outgoing: HashMap<String, ConnectionOutcome>,
+  pub is_clean: bool,
+  pub outgoing: HashMap<String, String>,
 }
 
 #[derive(Deserialize, Clone, Debug)]
-pub struct ConnectionOutcome {
-  pub subtitle: String,
+pub struct Trigger {
   #[serde(default)]
-  pub tone: String, // "warm" | "uneasy" | "bitter" -> maps to ply text effects
+  pub when_connected: Vec<ChainStep>,
   #[serde(default)]
+  pub when_same_chain: Vec<String>,
   pub spawns: Vec<String>,
+  pub subtitle: Option<String>,
+}
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct StoryData {
+  pub intro_subtitle: String,
+  pub starting_nodes: Vec<String>,
+  pub outro_trigger_chain: Vec<ChainStep>,
+  pub outro_subtitle: String,
+  pub nodes: HashMap<String, MemoryNodeDef>,
+  pub triggers: Vec<Trigger>,
 }
 
 impl StoryData {

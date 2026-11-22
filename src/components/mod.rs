@@ -34,11 +34,13 @@ impl GameState {
       .children(|ui| {
         match self.phase {
           GamePhase::Title => self.render_title(ui),
-          GamePhase::Playing | GamePhase::Finale => {
+          GamePhase::Playing | GamePhase::OutroReady | GamePhase::Finale => {
             self.render_void_canvas(ui, &chain_tex);
             self.render_minimap(ui);
-            self.render_home_button(ui);
             self.render_subtitle_bar(ui);
+            if self.phase == GamePhase::OutroReady {
+              self.render_break_free_button(ui);
+            }
           }
           GamePhase::Ended => {
             self.render_ended(ui);
@@ -60,14 +62,7 @@ impl GameState {
           .color(0x1E1C20)
         );
 
-        ui.text("Pieces of a memory. Put them in order.", |t| t
-          .font(&NARRATOR_FONT)
-          .font_size(14)
-          .alignment(CenterX)
-          .color(0x6E6760)
-        );
-
-        ui.element().width(fixed!(1.0)).height(fixed!(16.0)).empty();
+        ui.element().width(fixed!(1.0)).height(fixed!(12.0)).empty();
 
         ui.element()
           .id("begin_btn")
@@ -98,21 +93,14 @@ impl GameState {
       .height(grow!())
       .layout(|l| l.direction(TopToBottom).align(CenterX, CenterY).gap(20).padding(32))
       .children(move |ui| {
-        ui.text("Quiet.", |t| t
+        ui.text("It's Over", |t| t
           .font(&MEMORY_FONT)
           .font_size(33)
           .alignment(CenterX)
           .color((30u8, 34u8, 36u8, alpha))
         );
 
-        ui.text("Nothing left to hold onto.", |t| t
-          .font(&NARRATOR_FONT)
-          .font_size(14)
-          .alignment(CenterX)
-          .color((96u8, 102u8, 106u8, alpha))
-        );
-
-        ui.element().width(fixed!(1.0)).height(fixed!(20.0)).empty();
+        ui.element().width(fixed!(1.0)).height(fixed!(12.0)).empty();
 
         ui.element()
           .id("restart_btn")
@@ -134,7 +122,7 @@ impl GameState {
             })
           })
           .children(move |ui| {
-            ui.text("Remember again", |t| t
+            ui.text("Recollect", |t| t
               .font(&NARRATOR_FONT)
               .font_size(12)
               .alignment(CenterX)

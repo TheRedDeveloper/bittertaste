@@ -1,16 +1,8 @@
-use crate::game::{CANVAS_H, CANVAS_W, ConnectTarget, GamePhase, GameState, LinkTone, NODE_W};
-use crate::story::ConnectionOutcome;
+use crate::game::{CANVAS_H, CANVAS_W, ConnectTarget, DEFAULT_NODE_H, GamePhase, GameState, NODE_W};
+use crate::story::ChainStep;
 use ply_engine::prelude::*;
 
 impl GameState {
-  pub fn is_free(&self, idx: usize) -> bool {
-    self.nodes[idx].incoming.is_none() && self.nodes[idx].outgoing.is_none()
-  }
-
-  pub fn is_middle_node(&self, idx: usize) -> bool {
-    self.nodes[idx].incoming.is_some() && self.nodes[idx].outgoing.is_some()
-  }
-
   pub fn same_chain(&self, a: usize, b: usize) -> bool {
     let mut cur = Some(a);
     let mut steps = 0;
@@ -39,7 +31,7 @@ impl GameState {
     false
   }
 
-  pub fn can_connect(&self, from: usize, to: usize) -> Option<&ConnectionOutcome> {
+  pub fn can_connect(&self, from: usize, to: usize) -> Option<&str> {
     if from == to || !self.nodes[from].visible || !self.nodes[to].visible {
       return None;
     }
@@ -49,34 +41,58 @@ impl GameState {
     if self.same_chain(from, to) {
       return None;
     }
-    self.nodes[from].def.outgoing.get(&self.nodes[to].def.id)
+    self.nodes[from].def.outgoing.get(&self.nodes[to].id).map(|s| s.as_str())
+  }
+
+  pub fn chain_endpoints(&self, idx: usize) -> (usize, usize) {
+    let mut head = idx;
+    let mut steps = 0;
+    while let Some(prev) = self.nodes[head].incoming {
+      head = prev;
+      steps += 1;
+      if steps > self.nodes.len() {
+        break;
+      }
+    }
+    let mut tail = idx;
+    steps = 0;
+    while let Some(next) = self.nodes[tail].outgoing {
+      tail = next;
+      steps += 1;
+      if steps > self.nodes.len() {
+        break;
+      }
+    }
+    (head, tail)
   }
 
   pub fn can_insert_midpoint(&self, node: usize, a: usize, b: usize) -> bool {
-    if !self.nodes[node].visible || !self.is_free(node) {
+    if !self.nodes[node].visible {
       return false;
     }
-    if node == a || node == b || self.nodes[a].outgoing != Some(b) {
+    if node == a || node == b || self.nodes[a].outgoing != Some(b) || self.same_chain(node, a) {
       return false;
     }
-    let n_id = &self.nodes[node].def.id;
-    let b_id = &self.nodes[b].def.id;
-    self.nodes[a].def.outgoing.contains_key(n_id) && self.nodes[node].def.outgoing.contains_key(b_id)
+    let (head, tail) = self.chain_endpoints(node);
+    let head_id = &self.nodes[head].id;
+    let b_id = &self.nodes[b].id;
+    self.nodes[a].def.outgoing.contains_key(head_id) && self.nodes[tail].def.outgoing.contains_key(b_id)
   }
 
   pub fn valid_targets_for(&self, sel: usize) -> Vec<ConnectTarget> {
     if self.phase != GamePhase::Playing {
       return Vec::new();
     }
+    let (head, tail) = self.chain_endpoints(sel);
     let mut out = Vec::new();
     for i in 0..self.nodes.len() {
-      if !self.nodes[i].visible || i == sel {
+      if !self.nodes[i].visible || self.same_chain(sel, i) {
         continue;
       }
-      if self.can_connect(sel, i).is_some() {
+      if self.can_connect(tail, i).is_some() {
         out.push(ConnectTarget::ToHead(i));
       }
-      if self.can_connect(i, sel).is_some() {
+      if self.can_connect(i, head).is_some() {
         out.push(ConnectTarget::FromTail(i));
       }
       if let Some(b) = self.nodes[i].outgoing {
@@ -92,49 +108,58 @@ impl GameState {
     if self.phase != GamePhase::Playing {
       return;
     }
+    let (head, tail) = self.chain_endpoints(sel);
     match target {
       ConnectTarget::ToHead(b) => {
-        self.subtitle_queue.clear();
-        self.connect_pair(sel, b);
+        self.connect_pair(tail, b);
       }
       ConnectTarget::FromTail(a) => {
-        self.subtitle_queue.clear();
-        self.connect_pair(a, sel);
+        self.connect_pair(a, head);
       }
       ConnectTarget::Midpoint(a, b) => {
-        self.subtitle_queue.clear();
         self.disconnect_pair(a, b);
-        self.connect_pair(a, sel);
-        self.connect_pair(sel, b);
+        self.connect_pair(a, head);
+        self.connect_pair(tail, b);
       }
     }
+    self.check_triggers();
     self.check_outro_trigger();
   }
 
   fn connect_pair(&mut self, from: usize, to: usize) {
-    let outcome = match self.nodes[from].def.outgoing.get(&self.nodes[to].def.id) {
-      Some(o) => o.clone(),
+    let subtitle = match self.nodes[from].def.outgoing.get(&self.nodes[to].id) {
+      Some(s) => s.clone(),
       None => return,
     };
     self.nodes[from].outgoing = Some(to);
     self.nodes[to].incoming = Some(from);
 
-    let tone = LinkTone::from_str(&outcome.tone);
-    self.push_subtitle(outcome.subtitle, tone);
+    if !subtitle.trim().is_empty() {
+      self.set_immediate_subtitle(subtitle);
+    }
+  }
 
-    // Spawn any newly unlocked anomalies near the current screen center
-    let viewport_center = Vec2::new(screen_width() * 0.5, screen_height() * 0.5) - self.canvas_origin;
-    let anchor = if self.canvas_origin != Vec2::ZERO {
-      viewport_center
-    } else {
-      (self.nodes[from].pos + self.nodes[to].pos) * 0.5
-    };
-    for (i, spawn_id) in outcome.spawns.iter().enumerate() {
+  fn spawn_nodes(&mut self, spawn_ids: &[String]) {
+    let view_origin = -self.canvas_origin;
+    let margin_x = NODE_W * 0.5 + 24.0;
+    let margin_top = DEFAULT_NODE_H * 0.5 + 24.0;
+    let margin_bottom = DEFAULT_NODE_H * 0.5 + 84.0;
+    let view_min = Vec2::new(
+      (view_origin.x + margin_x).clamp(260.0, CANVAS_W - 260.0),
+      (view_origin.y + margin_top).clamp(220.0, CANVAS_H - 220.0),
+    );
+    let view_max = Vec2::new(
+      (view_origin.x + screen_width() - margin_x).max(view_min.x).clamp(260.0, CANVAS_W - 260.0),
+      (view_origin.y + screen_height() - margin_bottom).max(view_min.y).clamp(220.0, CANVAS_H - 220.0),
+    );
+    let anchor = (view_min + view_max) * 0.5;
+
+    for (i, spawn_id) in spawn_ids.iter().enumerate() {
       if let Some(&s_idx) = self.id_to_idx.get(spawn_id) {
         if !self.nodes[s_idx].visible {
           let angle = (i as f32 * 2.1) + 0.8;
-          let offset = Vec2::new(angle.cos() * 170.0, angle.sin() * 140.0 + 120.0);
-          let pos = self.find_open_spot(anchor + offset);
+          let offset = Vec2::new(angle.cos() * 140.0, angle.sin() * 110.0);
+          let pos = self.find_open_spot(anchor + offset, view_min, view_max);
           self.nodes[s_idx].visible = true;
           self.nodes[s_idx].pos = pos;
           self.nodes[s_idx].spawn_anim = 0.0;
@@ -143,26 +168,72 @@ impl GameState {
     }
   }
 
-  fn find_open_spot(&self, desired: Vec2) -> Vec2 {
-    let mut candidate = desired;
-    for ring in 0..8 {
-      let step_r = ring as f32 * 70.0;
-      for k in 0..8 {
-        let a = (k as f32 / 8.0) * std::f32::consts::TAU;
-        let test = Vec2::new(
-          (desired.x + a.cos() * step_r).clamp(280.0, CANVAS_W - 280.0),
-          (desired.y + a.sin() * step_r).clamp(240.0, CANVAS_H - 240.0),
-        );
-        let clear = self.nodes.iter().filter(|n| n.visible).all(|n| {
-          (n.pos.x - test.x).abs() > NODE_W + 30.0 || (n.pos.y - test.y).abs() > 130.0
-        });
-        if clear {
-          return test;
+  fn is_spot_clear(&self, test: Vec2) -> bool {
+    let node_clear = self.nodes.iter().filter(|n| n.visible).all(|n| {
+      let min_dx = (n.size.x.max(NODE_W) + NODE_W) * 0.5 + 24.0;
+      let min_dy = (n.size.y.max(DEFAULT_NODE_H) + DEFAULT_NODE_H) * 0.5 + 24.0;
+      (n.pos.x - test.x).abs() > min_dx || (n.pos.y - test.y).abs() > min_dy
+    });
+    if !node_clear {
+      return false;
+    }
+
+    // Also avoid spawning directly on top of an existing chain link
+    for (a, node) in self.nodes.iter().enumerate() {
+      if !node.visible {
+        continue;
+      }
+      if let Some(b) = node.outgoing {
+        let p1 = self.nodes[a].pos;
+        let p2 = self.nodes[b].pos;
+        let min_x = p1.x.min(p2.x) - NODE_W * 0.5;
+        let max_x = p1.x.max(p2.x) + NODE_W * 0.5;
+        let min_y = p1.y.min(p2.y) - DEFAULT_NODE_H * 0.5;
+        let max_y = p1.y.max(p2.y) + DEFAULT_NODE_H * 0.5;
+        if test.x >= min_x && test.x <= max_x && test.y >= min_y && test.y <= max_y {
+          return false;
         }
-        candidate = test;
       }
     }
-    candidate
+    true
+  }
+
+  fn find_open_spot(&self, desired: Vec2, view_min: Vec2, view_max: Vec2) -> Vec2 {
+    let clamped_desired = Vec2::new(
+      desired.x.clamp(view_min.x, view_max.x),
+      desired.y.clamp(view_min.y, view_max.y),
+    );
+    // 1. Try to find a non-overlapping spot inside the visible viewport
+    for ring in 0..10 {
+      let step_r = ring as f32 * 70.0;
+      for k in 0..12 {
+        let a = (k as f32 / 12.0) * std::f32::consts::TAU;
+        let test = Vec2::new(
+          (clamped_desired.x + a.cos() * step_r).clamp(view_min.x, view_max.x),
+          (clamped_desired.y + a.sin() * step_r).clamp(view_min.y, view_max.y),
+        );
+        if self.is_spot_clear(test) {
+          return test;
+        }
+      }
+    }
+    // 2. No space on screen -> search outward off-screen until a clear spot is found
+    let mut fallback = clamped_desired;
+    for ring in 1..28 {
+      let step_r = ring as f32 * 110.0;
+      for k in 0..16 {
+        let a = (k as f32 / 16.0) * std::f32::consts::TAU;
+        let test = Vec2::new(
+          (clamped_desired.x + a.cos() * step_r).clamp(260.0, CANVAS_W - 260.0),
+          (clamped_desired.y + a.sin() * step_r).clamp(220.0, CANVAS_H - 220.0),
+        );
+        if self.is_spot_clear(test) {
+          return test;
+        }
+        fallback = test;
+      }
+    }
+    fallback
   }
 
   pub fn disconnect_pair(&mut self, from: usize, to: usize) {
@@ -174,33 +245,108 @@ impl GameState {
     }
   }
 
+  fn collect_all_chains(&self) -> Vec<Vec<&str>> {
+    let mut chains = Vec::new();
+    for (idx, node) in self.nodes.iter().enumerate() {
+      if !node.visible || node.incoming.is_some() {
+        continue;
+      }
+      let mut chain = Vec::new();
+      let mut cur = Some(idx);
+      let mut steps = 0;
+      while let Some(c) = cur {
+        chain.push(self.nodes[c].id.as_str());
+        cur = self.nodes[c].outgoing;
+        steps += 1;
+        if steps > self.nodes.len() {
+          break;
+        }
+      }
+      chains.push(chain);
+    }
+    chains
+  }
+
+  fn matches_steps_at(chain_ids: &[&str], start: usize, steps: &[ChainStep]) -> Option<usize> {
+    let mut pos = start;
+    for step in steps {
+      match step {
+        ChainStep::Single(expected) => {
+          if pos >= chain_ids.len() || chain_ids[pos] != expected {
+            return None;
+          }
+          pos += 1;
+        }
+        ChainStep::AnyOrder(expected_set) => {
+          let k = expected_set.len();
+          if pos + k > chain_ids.len() {
+            return None;
+          }
+          let block = &chain_ids[pos..pos + k];
+          if !expected_set.iter().all(|id| block.contains(&id.as_str())) {
+            return None;
+          }
+          pos += k;
+        }
+      }
+    }
+    Some(pos)
+  }
+
+  fn check_triggers(&mut self) {
+    let chains = self.collect_all_chains();
+    let mut to_fire = Vec::new();
+
+    for (t_idx, trigger) in self.story.triggers.iter().enumerate() {
+      if self.fired_triggers[t_idx] {
+        continue;
+      }
+      let connected_ok = trigger.when_connected.is_empty()
+        || chains.iter().any(|chain| {
+          (0..chain.len()).any(|start| Self::matches_steps_at(chain, start, &trigger.when_connected).is_some())
+        });
+      let same_chain_ok = trigger.when_same_chain.is_empty()
+        || chains.iter().any(|chain| {
+          trigger.when_same_chain.iter().all(|id| chain.contains(&id.as_str()))
+        });
+
+      if connected_ok && same_chain_ok {
+        to_fire.push(t_idx);
+      }
+    }
+
+    for t_idx in to_fire {
+      self.fired_triggers[t_idx] = true;
+      let spawns = self.story.triggers[t_idx].spawns.clone();
+      let subtitle = self.story.triggers[t_idx].subtitle.clone();
+      self.spawn_nodes(&spawns);
+      if let Some(sub) = subtitle {
+        if !sub.trim().is_empty() {
+          self.push_subtitle(sub);
+        }
+      }
+    }
+  }
+
   fn check_outro_trigger(&mut self) {
     if self.phase != GamePhase::Playing || self.story.outro_trigger_chain.is_empty() {
       return;
     }
-    let chain = &self.story.outro_trigger_chain;
-    let first_idx = match self.id_to_idx.get(&chain[0]) {
-      Some(&i) => i,
-      None => return,
-    };
-
-    let mut cur = Some(first_idx);
-    for expected_id in chain {
-      match cur {
-        Some(idx) if self.nodes[idx].def.id == *expected_id => {
-          cur = self.nodes[idx].outgoing;
-        }
-        _ => return,
-      }
+    let chains = self.collect_all_chains();
+    let matched = chains.iter().any(|chain| {
+      Self::matches_steps_at(chain, 0, &self.story.outro_trigger_chain) == Some(chain.len())
+    });
+    if !matched {
+      return;
     }
 
-    // Full true chronological chain assembled -> Act III!
-    self.phase = GamePhase::Finale;
-    self.finale_timer = 0.0;
+    // Full true chronological chain assembled -> enter read-only OutroReady state
+    self.phase = GamePhase::OutroReady;
     self.selected = None;
+    self.pointer_down_node = None;
     self.dragging = None;
     self.hover_preview = None;
-    self.set_immediate_subtitle(self.story.outro_subtitle.clone(), LinkTone::Bitter);
+    self.set_immediate_subtitle(self.story.outro_subtitle.clone());
   }
 
   pub fn link_count(&self) -> usize {
@@ -216,16 +362,7 @@ impl GameState {
     }
     let total = self.nodes.len().max(1) as f32;
     let visible = self.nodes.iter().filter(|n| n.visible).count() as f32;
-    let bitter_links = self
-      .nodes
-      .iter()
-      .filter_map(|n| {
-        n.outgoing.and_then(|to| {
-          n.def.outgoing.get(&self.nodes[to].def.id).map(|o| o.tone == "bitter")
-        })
-      })
-      .filter(|&b| b)
-      .count() as f32;
-    ((visible / total) * 0.5 + (bitter_links / total) * 0.8).clamp(0.0, 1.0)
+    let links = self.link_count() as f32;
+    ((visible / total) * 0.45 + (links / (total - 1.0).max(1.0)) * 0.55).clamp(0.0, 1.0)
   }
 }

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bitter Taste Story Data",
+  "description": "Schema for assets/story.json defining memory nodes, flexible chain completion, and decoupled wave triggers.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intro_subtitle",
+    "starting_nodes",
+    "outro_trigger_chain",
+    "outro_subtitle",
+    "nodes",
+    "triggers"
+  ],
+  "properties": {
+    "intro_subtitle": {
+      "type": "string",
+      "description": "Subtitle shown when Act I begins."
+    },
+    "starting_nodes": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nodeId"
+      },
+      "description": "Node IDs that start visible in the void."
+    },
+    "outro_trigger_chain": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/chainStep"
+      },
+      "description": "Ordered sequence of chain steps required to finish Act II and enter Act III. Each step is either a single node ID or an array of node IDs allowed in any order as a contiguous block."
+    },
+    "outro_subtitle": {
+      "type": "string",
+      "description": "Subtitle shown when outro_trigger_chain is completed."
+    },
+    "nodes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "#/$defs/nodeId"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/memoryNode"
+      },
+      "description": "Dictionary mapping unique node IDs to memory node definitions."
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/trigger"
+      },
+      "description": "One-shot wave triggers decoupled from individual edges. Each trigger fires at most once."
+    }
+  },
+  "$defs": {
+    "nodeId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Unique snake_case identifier for a memory node."
+    },
+    "chainStep": {
+      "description": "A single required node ID, or an array of node IDs that may appear in any order as a contiguous sub-sequence.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/nodeId"
+        },
+        {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nodeId"
+          }
+        }
+      ]
+    },
+    "memoryNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "is_clean",
+        "outgoing"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Memory fragment text displayed inside the square."
+        },
+        "is_clean": {
+          "type": "boolean",
+          "description": "True for Act I surface memories; false for repressed truths and ending beats."
+        },
+        "outgoing": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/nodeId"
+          },
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Valid target node IDs mapped to an optional narrator comment. Empty string \"\" means a silent connection. Plays whenever the connection is made (including after unhooking and reconnecting)."
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spawns"
+      ],
+      "anyOf": [
+        {
+          "required": [
+            "when_connected"
+          ]
+        },
+        {
+          "required": [
+            "when_same_chain"
+          ]
+        }
+      ],
+      "properties": {
+        "when_connected": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/chainStep"
+          },
+          "description": "Fires once any contiguous sub-chain matches this ChainStep sequence (supporting single IDs and any-order arrays, identical to outro_trigger_chain)."
+        },
+        "when_same_chain": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nodeId"
+          },
+          "description": "Fires once all listed node IDs belong to the same connected chain in any order, even with other nodes inserted between them."
+        },
+        "spawns": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nodeId"
+          },
+          "description": "Node IDs to fade into the void if not already visible."
+        },
+        "subtitle": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional one-shot narrator subtitle played when this trigger fires."
+        }
+      }
+    }
+  }
+}

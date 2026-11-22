@@ -3,16 +3,18 @@ use ply_engine::prelude::*;
 use std::collections::HashMap;
 
 pub const CANVAS_W: f32 = 3200.0;
-pub const CANVAS_H: f32 = 2400.0;
+pub const CANVAS_H: f32 = 3200.0;
 pub const NODE_W: f32 = 232.0;
 pub const DEFAULT_NODE_H: f32 = 96.0;
 pub const CHAIN_H: f32 = 26.0;
 pub const CHAIN_TILE_W: f32 = CHAIN_H * 4.0; // 512x2048 rotated 90 deg -> 1:4 aspect
+pub const CHAIN_GAP_X: f32 = 88.0;
+pub const CHAIN_GAP_Y: f32 = 44.0;
 pub const DRAG_THRESHOLD: f32 = 6.0;
 pub const SUBTITLE_DURATION: f32 = 4.5;
 pub const TYPE_CHAR_DURATION: f32 = 0.032;
 pub const MINIMAP_W: f32 = 140.0;
-pub const MINIMAP_H: f32 = 105.0;
+pub const MINIMAP_H: f32 = 140.0;
 
 pub fn chain_key(a: usize, b: usize) -> u32 {
   ((a as u32) << 16) | (b as u32)
@@ -22,33 +24,14 @@ pub fn chain_key(a: usize, b: usize) -> u32 {
 pub enum GamePhase {
   Title,
   Playing,
-  Finale, // Act III: sever all remaining links
-  Ended,  // Quiet relief
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum LinkTone {
-  Warm,
-  Uneasy,
-  Bitter,
-}
-
-impl LinkTone {
-  pub fn from_str(s: &str) -> Self {
-    match s {
-      "bitter" => Self::Bitter,
-      "uneasy" => Self::Uneasy,
-      _ => Self::Warm,
-    }
-  }
-
-  pub fn chain_color(&self, alpha_mult: f32) -> MacroquadColor {
-    MacroquadColor::new(1.0, 1.0, 1.0, 0.96 * alpha_mult)
-  }
+  OutroReady, // Full chain assembled: pulsing, read-only, "Break free" button visible
+  Finale,     // Act III: severing all remaining links
+  Ended,      // Quiet relief
 }
 
 #[derive(Clone, Debug)]
 pub struct NodeState {
+  pub id: String,
   pub def: MemoryNodeDef,
   pub visible: bool,
   pub pos: Vec2,      // Center in void_canvas coordinates
@@ -62,7 +45,6 @@ pub struct NodeState {
 #[derive(Clone, Debug)]
 pub struct SubtitleEntry {
   pub text: String,
-  pub tone: LinkTone,
   pub elapsed: f32,
   pub remaining: f32,
 }
@@ -106,8 +88,15 @@ pub struct GameState {
   // Void click tracking (to distinguish pan from empty-space click)
   pub void_press_screen: Option<Vec2>,
 
+  // Minimap state
+  pub minimap_collapsed: bool,
+  pub minimap_dragging: bool,
+
   // Subtitles
   pub subtitle_queue: Vec<SubtitleEntry>,
+
+  // One-shot wave triggers
+  pub fired_triggers: Vec<bool>,
 
   // Finale fade out & chain explosion
   pub relief_fade: f32,
@@ -133,7 +122,10 @@ impl GameState {
       drag_offset: Vec2::ZERO,
       hover_preview: None,
       void_press_screen: None,
+      minimap_collapsed: false,
+      minimap_dragging: false,
       subtitle_queue: Vec::new(),
+      fired_triggers: Vec::new(),
       relief_fade: 0.0,
       finale_timer: 0.0,
       shards: Vec::new(),
@@ -150,22 +142,29 @@ impl GameState {
     self.pointer_down_node = None;
     self.dragging = None;
     self.hover_preview = None;
+    self.minimap_dragging = false;
     self.subtitle_queue.clear();
+    self.fired_triggers = vec![false; self.story.triggers.len()];
     self.relief_fade = 0.0;
     self.finale_timer = 0.0;
     self.shards.clear();
     self.scroll_initialized = false;
 
-    let visible_count = self.story.nodes.iter().filter(|n| n.starts_visible).count().max(1);
+    let mut ids: Vec<String> = self.story.nodes.keys().cloned().collect();
+    ids.sort();
+
+    let visible_count = self.story.starting_nodes.len().max(1);
     let mut vis_i = 0usize;
 
-    for (idx, def) in self.story.nodes.iter().enumerate() {
-      self.id_to_idx.insert(def.id.clone(), idx);
+    for (idx, id) in ids.into_iter().enumerate() {
+      let def = self.story.nodes[&id].clone();
+      let starts_visible = self.story.starting_nodes.contains(&id);
+      self.id_to_idx.insert(id.clone(), idx);
 
-      let pos = if def.starts_visible {
+      let pos = if starts_visible {
         let angle = (vis_i as f32 / visible_count as f32) * std::f32::consts::TAU - 0.5;
-        let rx = 250.0;
-        let ry = 145.0;
+        let rx = 250.0 + (visible_count as f32 * 14.0).min(240.0);
+        let ry = 145.0 + (visible_count as f32 * 10.0).min(180.0);
         vis_i += 1;
         Vec2::new(CANVAS_W * 0.5 + angle.cos() * rx, CANVAS_H * 0.5 + angle.sin() * ry)
       } else {
@@ -173,53 +172,43 @@ impl GameState {
       };
 
       self.nodes.push(NodeState {
-        def: def.clone(),
-        visible: def.starts_visible,
+        id,
+        def,
+        visible: starts_visible,
         pos,
         size: Vec2::new(NODE_W, DEFAULT_NODE_H),
         incoming: None,
         outgoing: None,
-        spawn_anim: if def.starts_visible { 1.0 } else { 0.0 },
+        spawn_anim: if starts_visible { 1.0 } else { 0.0 },
         drift_phase: idx as f32 * 1.37,
       });
     }
   }
 
   pub fn is_over_interactive(&self, ply: &Ply) -> bool {
-    (0..self.nodes.len()).any(|i| {
-      self.nodes[i].visible
-        && (ply.pointer_over(("mem_node", i as u32))
-          || ply.pointer_over(("head_port", i as u32))
-          || ply.pointer_over(("tail_port", i as u32)))
-    }) || self.nodes.iter().enumerate().any(|(a, n)| {
-      n.visible
-        && n.outgoing.map_or(false, |b| ply.pointer_over(("chain", chain_key(a, b))))
-    }) || ply.pointer_over("home_btn")
-      || ply.pointer_over("minimap_box")
-  }
-
-  fn center_on_nodes(&self, ply: &mut Ply) {
-    let mut sum = Vec2::ZERO;
-    let mut count = 0usize;
-    for n in &self.nodes {
-      if n.visible {
-        sum += n.pos;
-        count += 1;
-      }
-    }
-    let center = if count > 0 {
-      sum / count as f32
+    let nodes_or_chains = if self.phase == GamePhase::Playing {
+      (0..self.nodes.len()).any(|i| {
+        self.nodes[i].visible
+          && (ply.pointer_over(("mem_node", i as u32))
+            || ply.pointer_over(("head_port", i as u32))
+            || ply.pointer_over(("tail_port", i as u32)))
+      }) || self.nodes.iter().enumerate().any(|(a, n)| {
+        n.visible
+          && n.outgoing.map_or(false, |b| ply.pointer_over(("chain", chain_key(a, b))))
+      })
     } else {
-      Vec2::new(CANVAS_W * 0.5, CANVAS_H * 0.5)
+      false
     };
-    let sx = (center.x - screen_width() * 0.5).clamp(0.0, (CANVAS_W - screen_width()).max(0.0));
-    let sy = (center.y - screen_height() * 0.5).clamp(0.0, (CANVAS_H - screen_height()).max(0.0));
-    ply.set_scroll_position("void_scroll", (sx, sy));
+
+    nodes_or_chains
+      || ply.pointer_over("minimap_box")
+      || ply.pointer_over("minimap_collapse_btn")
+      || ply.pointer_over("minimap_expand_btn")
+      || (self.phase == GamePhase::OutroReady && ply.pointer_over("break_free_btn"))
   }
 
   fn disconnect_with_shards(&mut self, a: usize, b: usize) {
-    let p1 = self.nodes[a].pos + Vec2::new(NODE_W * 0.45, 0.0);
-    let p2 = self.nodes[b].pos - Vec2::new(NODE_W * 0.45, 0.0);
+    let (p1, p2) = self.link_endpoints(a, b, self.nodes[a].pos, self.nodes[b].pos);
     let mid = (p1 + p2) * 0.5;
     let diff = p2 - p1;
     let angle = diff.y.atan2(diff.x);
@@ -232,6 +221,18 @@ impl GameState {
       Vec2::new(screen.x - bb.x, screen.y - bb.y)
     } else {
       screen
+    }
+  }
+
+  fn pan_to_minimap_cursor(&self, ply: &mut Ply, cursor: Vec2) {
+    if let Some(bb) = ply.bounding_box("minimap_box") {
+      let u = ((cursor.x - bb.x) / bb.width.max(1.0)).clamp(0.0, 1.0);
+      let v = ((cursor.y - bb.y) / bb.height.max(1.0)).clamp(0.0, 1.0);
+      let cx = u * CANVAS_W;
+      let cy = v * CANVAS_H;
+      let sx = (cx - screen_width() * 0.5).clamp(0.0, (CANVAS_W - screen_width()).max(0.0));
+      let sy = (cy - screen_height() * 0.5).clamp(0.0, (CANVAS_H - screen_height()).max(0.0));
+      ply.set_scroll_position("void_scroll", (sx, sy));
     }
   }
 
@@ -272,33 +273,69 @@ impl GameState {
       GamePhase::Title => {
         if ply.is_just_released("begin_btn") && ply.pointer_over("begin_btn") {
           self.phase = GamePhase::Playing;
-          self.set_immediate_subtitle(self.story.intro_subtitle.clone(), LinkTone::Warm);
+          self.set_immediate_subtitle(self.story.intro_subtitle.clone());
         }
       }
       GamePhase::Ended => {
         if ply.is_just_released("restart_btn") && ply.pointer_over("restart_btn") {
           self.reset_world();
           self.phase = GamePhase::Playing;
-          self.set_immediate_subtitle(self.story.intro_subtitle.clone(), LinkTone::Warm);
+          self.set_immediate_subtitle(self.story.intro_subtitle.clone());
         }
       }
-      GamePhase::Playing | GamePhase::Finale => {
-        if ply.is_just_released("home_btn") && ply.pointer_over("home_btn") {
-          self.center_on_nodes(ply);
+      GamePhase::Playing | GamePhase::OutroReady | GamePhase::Finale => {
+        // Minimap collapse / expand toggle (instant, no animation)
+        if !self.minimap_collapsed
+          && ply.is_just_released("minimap_collapse_btn")
+          && ply.pointer_over("minimap_collapse_btn")
+        {
+          self.minimap_collapsed = true;
+          self.minimap_dragging = false;
+        } else if self.minimap_collapsed
+          && ply.is_just_released("minimap_expand_btn")
+          && ply.pointer_over("minimap_expand_btn")
+        {
+          self.minimap_collapsed = false;
         }
 
-        // Node press (for drag or click-select)
-        for idx in 0..self.nodes.len() {
-          if self.nodes[idx].visible && ply.is_just_pressed(("mem_node", idx as u32)) {
-            self.pointer_down_node = Some(idx);
-            self.pointer_down_screen = pointer_screen;
-            self.drag_offset = self.nodes[idx].pos - pointer_canvas;
-            break;
+        // Minimap click & drag panning
+        if !self.minimap_collapsed
+          && is_mouse_button_pressed(MouseButton::Left)
+          && ply.pointer_over("minimap_box")
+          && !ply.pointer_over("minimap_collapse_btn")
+        {
+          self.minimap_dragging = true;
+          self.pan_to_minimap_cursor(ply, pointer_screen);
+        }
+        if self.minimap_dragging {
+          if is_mouse_button_down(MouseButton::Left) {
+            self.pan_to_minimap_cursor(ply, pointer_screen);
+          } else {
+            self.minimap_dragging = false;
           }
         }
 
-        // Port clicks (connect selected node to head/tail port)
+        if self.phase == GamePhase::OutroReady {
+          if ply.is_just_released("break_free_btn") && ply.pointer_over("break_free_btn") {
+            self.phase = GamePhase::Finale;
+            self.finale_timer = 0.0;
+            self.subtitle_queue.clear();
+          }
+        }
+
+        // Node press, ports, and chain clicks are only active during Playing
         if self.phase == GamePhase::Playing {
+          if !self.minimap_dragging {
+            for idx in 0..self.nodes.len() {
+              if self.nodes[idx].visible && ply.is_just_pressed(("mem_node", idx as u32)) {
+                self.pointer_down_node = Some(idx);
+                self.pointer_down_screen = pointer_screen;
+                self.drag_offset = self.nodes[idx].pos - pointer_canvas;
+                break;
+              }
+            }
+          }
+
           if let Some(sel) = self.selected {
             let mut clicked_target = None;
             for idx in 0..self.nodes.len() {
@@ -321,28 +358,28 @@ impl GameState {
               self.selected = None;
             }
           }
-        }
 
-        // Chain clicks (insert midpoint or unhook link)
-        let mut clicked_link = None;
-        for (a, node) in self.nodes.iter().enumerate() {
-          if !node.visible {
-            continue;
-          }
-          if let Some(b) = node.outgoing {
-            let cid = ("chain", chain_key(a, b));
-            if ply.is_just_released(cid) && ply.pointer_over(cid) {
-              clicked_link = Some((a, b));
-              break;
+          let mut clicked_link = None;
+          for (a, node) in self.nodes.iter().enumerate() {
+            if !node.visible {
+              continue;
+            }
+            if let Some(b) = node.outgoing {
+              let cid = ("chain", chain_key(a, b));
+              if ply.is_just_released(cid) && ply.pointer_over(cid) {
+                clicked_link = Some((a, b));
+                break;
+              }
             }
           }
-        }
-        if let Some((a, b)) = clicked_link {
-          if self.phase == GamePhase::Playing {
+          if let Some((a, b)) = clicked_link {
             if let Some(sel) = self.selected {
               if self.can_insert_midpoint(sel, a, b) {
                 self.commit_target(sel, ConnectTarget::Midpoint(a, b));
                 self.selected = None;
+              } else if self.same_chain(sel, a) {
+                self.disconnect_with_shards(a, b);
+                // Keep `sel` selected so the half containing `sel` remains selected
               } else {
                 self.disconnect_with_shards(a, b);
                 self.selected = None;
@@ -351,19 +388,13 @@ impl GameState {
               self.disconnect_with_shards(a, b);
               self.selected = None;
             }
-          } else if self.phase == GamePhase::Finale {
-            self.disconnect_with_shards(a, b);
-            if self.link_count() == 0 {
-              self.phase = GamePhase::Ended;
-              self.subtitle_queue.clear();
-            }
           }
         }
       }
     }
 
     // Track empty-void clicks to deselect without interfering with drag-scrolling or port clicks
-    if self.phase == GamePhase::Playing {
+    if self.phase == GamePhase::Playing && !self.minimap_dragging {
       let over_interactive = self.is_over_interactive(ply);
 
       if is_mouse_button_pressed(MouseButton::Left) && self.pointer_down_node.is_none() && !over_interactive {
@@ -403,15 +434,16 @@ impl GameState {
         } else if self.phase == GamePhase::Playing {
           // Tap / click without dragging
           if let Some(sel) = self.selected {
-            if sel == down_idx {
+            let (_, tail) = self.chain_endpoints(sel);
+            if self.same_chain(sel, down_idx) {
               self.selected = None;
-            } else if self.can_connect(sel, down_idx).is_some() {
+            } else if self.can_connect(tail, down_idx).is_some() {
               self.commit_target(sel, ConnectTarget::ToHead(down_idx));
               self.selected = None;
-            } else if !self.is_middle_node(down_idx) {
+            } else {
               self.selected = Some(down_idx);
             }
-          } else if !self.is_middle_node(down_idx) {
+          } else {
             self.selected = Some(down_idx);
           }
         }
@@ -423,16 +455,17 @@ impl GameState {
     self.hover_preview = None;
     if self.phase == GamePhase::Playing && self.dragging.is_none() {
       if let Some(sel) = self.selected {
+        let (head, tail) = self.chain_endpoints(sel);
         for i in 0..self.nodes.len() {
-          if i == sel || !self.nodes[i].visible {
+          if !self.nodes[i].visible || self.same_chain(sel, i) {
             continue;
           }
-          if ply.pointer_over(("tail_port", i as u32)) && self.can_connect(i, sel).is_some() {
+          if ply.pointer_over(("tail_port", i as u32)) && self.can_connect(i, head).is_some() {
             self.hover_preview = Some(ConnectTarget::FromTail(i));
             break;
           }
           if (ply.pointer_over(("mem_node", i as u32)) || ply.pointer_over(("head_port", i as u32)))
-            && self.can_connect(sel, i).is_some()
+            && self.can_connect(tail, i).is_some()
           {
             self.hover_preview = Some(ConnectTarget::ToHead(i));
             break;
@@ -475,38 +508,30 @@ impl GameState {
     }
     self.shards.retain(|s| s.life > 0.0);
 
-    // Act III Finale: explode chains one by one automatically, then transition to Ended
+    // Act III Finale: rapidly explode links one by one after "Break free" is clicked
     if self.phase == GamePhase::Finale {
       self.finale_timer += dt;
-      if self.finale_timer >= 1.4 {
-        let step_t = self.finale_timer - 1.4;
-        let expected_breaks = (step_t / 0.22).floor() as usize + 1;
-        let total_links = self.link_count();
-        if total_links > 0 && expected_breaks > 0 {
-          if let Some((a, b)) = self
-            .nodes
-            .iter()
-            .enumerate()
-            .find_map(|(i, n)| if n.visible { n.outgoing.map(|o| (i, o)) } else { None })
-          {
-            // Only pop one link per ~0.22s interval
-            let interval_idx = ((self.finale_timer - 1.4) / 0.22) as usize;
-            let remaining_after = self.story.outro_trigger_chain.len().saturating_sub(1 + interval_idx);
-            if total_links > remaining_after {
-              let p1 = self.nodes[a].pos;
-              let p2 = self.nodes[b].pos;
-              let mid = (p1 + p2) * 0.5;
-              let diff = p2 - p1;
-              let angle = diff.y.atan2(diff.x);
-              self.disconnect_pair(a, b);
-              self.nodes[a].pos -= Vec2::new(22.0, 0.0);
-              self.nodes[b].pos += Vec2::new(22.0, 0.0);
-              self.spawn_chain_shards(mid, angle);
-            }
+      const BREAK_INTERVAL: f32 = 0.12;
+      let expected_breaks = (self.finale_timer / BREAK_INTERVAL).floor() as usize + 1;
+      let total_links = self.link_count();
+      if total_links > 0 && expected_breaks > 0 {
+        if let Some((a, b)) = self
+          .nodes
+          .iter()
+          .enumerate()
+          .find_map(|(i, n)| if n.visible { n.outgoing.map(|o| (i, o)) } else { None })
+        {
+          let interval_idx = (self.finale_timer / BREAK_INTERVAL) as usize;
+          let remaining_after = self.story.outro_trigger_chain.len().saturating_sub(1 + interval_idx);
+          if total_links > remaining_after {
+            let dir = (self.nodes[b].pos - self.nodes[a].pos).normalize_or_zero();
+            self.nodes[a].pos -= dir * 18.0;
+            self.nodes[b].pos += dir * 18.0;
+            self.disconnect_with_shards(a, b);
           }
-        } else if total_links == 0 && self.shards.is_empty() && self.subtitle_queue.is_empty() {
-          self.phase = GamePhase::Ended;
         }
+      } else if total_links == 0 && self.shards.is_empty() {
+        self.phase = GamePhase::Ended;
       }
     }
 
@@ -515,7 +540,9 @@ impl GameState {
       self.relief_fade = (self.relief_fade + dt * 0.55).min(1.0);
     }
 
-    // Auto-layout linked sub-chains & component-level repulsion
-    self.step_layout(dt);
+    // Auto-layout linked sub-chains & component-level repulsion (freeze during Finale explosion)
+    if self.phase == GamePhase::Playing || self.phase == GamePhase::OutroReady {
+      self.step_layout(dt);
+    }
   }
 }
