@@ -26,6 +26,89 @@ pub enum LoadedAudio {
   Connect(Sound),
   Break(Sound),
   Vo(&'static str, VoClip),
+  Music(MusicTrack, Sound),
+}
+
+const BASE_MUSIC_VOL: f32 = 0.45;
+const DUCK_LEVEL: f32 = 0.65;
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MusicTrack {
+  TitleTheme = 0,
+  Act1Warm = 1,
+  Act2Dread = 2,
+  Act3Playback = 3,
+  EndingRiver = 4,
+}
+
+pub struct MusicManager {
+  tracks: [Option<Sound>; 5],
+  started: bool,
+  volumes: [f32; 5],
+  targets: [f32; 5],
+  fade_rate: f32,
+  duck_mult: f32,
+}
+
+impl Default for MusicManager {
+  fn default() -> Self {
+    Self {
+      tracks: Default::default(),
+      started: false,
+      volumes: [0.0; 5],
+      targets: [1.0, 0.0, 0.0, 0.0, 0.0],
+      fade_rate: 1.0 / 1.5,
+      duck_mult: 1.0,
+    }
+  }
+}
+
+impl MusicManager {
+  pub fn set_goal(&mut self, goal: Option<MusicTrack>, fade_secs: f32) {
+    self.targets = [0.0; 5];
+    if let Some(track) = goal {
+      self.targets[track as usize] = 1.0;
+    }
+    self.fade_rate = 1.0 / fade_secs.max(0.05);
+  }
+
+  pub fn insert_track(&mut self, track: MusicTrack, sound: Sound) {
+    self.tracks[track as usize] = Some(sound);
+    if !self.started && self.tracks.iter().all(|t| t.is_some()) {
+      // Launch all 5 tracks in the same frame from 0.0s on loop so bars/beats stay 100% phase-locked.
+      for s in self.tracks.iter().flatten() {
+        play_sound(s, PlaySoundParams { looped: true, volume: 0.0 });
+      }
+      self.volumes = [0.0; 5];
+      self.started = true;
+    }
+  }
+
+  pub fn update(&mut self, dt: f32, vo_playing: bool) {
+    if !self.started {
+      return;
+    }
+
+    let target_duck = if vo_playing { DUCK_LEVEL } else { 1.0 };
+    let duck_rate = if vo_playing { 2.5 } else { 0.85 };
+    if self.duck_mult < target_duck {
+      self.duck_mult = (self.duck_mult + duck_rate * dt).min(target_duck);
+    } else if self.duck_mult > target_duck {
+      self.duck_mult = (self.duck_mult - duck_rate * dt).max(target_duck);
+    }
+
+    let step = self.fade_rate * dt;
+    for i in 0..5 {
+      if self.volumes[i] < self.targets[i] {
+        self.volumes[i] = (self.volumes[i] + step).min(self.targets[i]);
+      } else if self.volumes[i] > self.targets[i] {
+        self.volumes[i] = (self.volumes[i] - step).max(self.targets[i]);
+      }
+      if let Some(sound) = &self.tracks[i] {
+        set_sound_volume(sound, self.volumes[i] * BASE_MUSIC_VOL * self.duck_mult);
+      }
+    }
+  }
 }
 
 /// Parses exact playback duration in seconds from an embedded RIFF/WAVE PCM buffer.
@@ -155,6 +238,20 @@ pub fn spawn_audio_loading_jobs() -> Receiver<LoadedAudio> {
       let _ = tx.send(LoadedAudio::Break(sound));
     }
     next_frame().await;
+
+    let music_entries: &[(MusicTrack, &'static [u8])] = &[
+      (MusicTrack::TitleTheme, include_bytes!("../assets/sounds/music/title_theme.wav")),
+      (MusicTrack::Act1Warm, include_bytes!("../assets/sounds/music/act1_warm.wav")),
+      (MusicTrack::Act2Dread, include_bytes!("../assets/sounds/music/act2_dread.wav")),
+      (MusicTrack::Act3Playback, include_bytes!("../assets/sounds/music/act3_playback.wav")),
+      (MusicTrack::EndingRiver, include_bytes!("../assets/sounds/music/ending_river.wav")),
+    ];
+    for &(track, bytes) in music_entries {
+      if let Ok(sound) = load_sound_from_bytes(bytes).await {
+        let _ = tx.send(LoadedAudio::Music(track, sound));
+      }
+      next_frame().await;
+    }
 
     for &(name, bytes) in TIER2_VO {
       if let Ok(sound) = load_sound_from_bytes(bytes).await {

@@ -1,6 +1,6 @@
 use crate::physics::ClusterPhysics;
 use crate::story::{MemoryNodeDef, StoryData};
-use crate::vo::{LoadedAudio, VoiceOverBank, spawn_audio_loading_jobs};
+use crate::sound::{LoadedAudio, MusicManager, MusicTrack, VoiceOverBank, spawn_audio_loading_jobs};
 use ply_engine::prelude::*;
 use std::collections::HashMap;
 use std::sync::mpsc::Receiver;
@@ -120,6 +120,9 @@ pub struct GameState {
   pub vo_active_node: Option<usize>,
   pub vo_timer: f32,
   pub vo_in_pause: bool,
+  pub vo_playing_timer: f32,
+  pub music: MusicManager,
+  pub last_music_goal: Option<Option<MusicTrack>>,
   pub audio_rx: Option<Receiver<LoadedAudio>>,
 }
 
@@ -157,6 +160,9 @@ impl GameState {
       vo_active_node: None,
       vo_timer: 0.0,
       vo_in_pause: false,
+      vo_playing_timer: 0.0,
+      music: MusicManager::default(),
+      last_music_goal: None,
       audio_rx: None,
     };
     state.reset_world();
@@ -174,8 +180,33 @@ impl GameState {
           LoadedAudio::Connect(sound) => self.connect_sound = Some(sound),
           LoadedAudio::Break(sound) => self.break_sound = Some(sound),
           LoadedAudio::Vo(key, clip) => self.vo_bank.insert(key, clip),
+          LoadedAudio::Music(track, sound) => self.music.insert_track(track, sound),
         }
       }
+    }
+  }
+
+  fn desired_music_state(&self) -> (Option<MusicTrack>, f32) {
+    match self.phase {
+      GamePhase::Title => (Some(MusicTrack::TitleTheme), 1.5),
+      GamePhase::Playing => {
+        let is_act2 = self.nodes.iter().any(|n| n.visible && !n.def.is_clean);
+        if is_act2 {
+          (Some(MusicTrack::Act2Dread), 2.4)
+        } else {
+          (Some(MusicTrack::Act1Warm), 2.4)
+        }
+      }
+      GamePhase::OutroReady => {
+        if self.vo_chain_queue.is_empty() && self.vo_active_node.is_none() {
+          (Some(MusicTrack::EndingRiver), 2.5)
+        } else if self.vo_chain_pos == 0 && self.vo_in_pause && self.vo_active_node.is_none() {
+          (None, 1.2)
+        } else {
+          (Some(MusicTrack::Act3Playback), 1.5)
+        }
+      }
+      GamePhase::Finale | GamePhase::Ended => (Some(MusicTrack::EndingRiver), 2.5),
     }
   }
 
@@ -190,6 +221,7 @@ impl GameState {
     self.vo_chain_pos = 0;
     self.vo_timer = 0.0;
     self.vo_in_pause = false;
+    self.vo_playing_timer = 0.0;
   }
 
   pub fn play_vo(&mut self, key: &str) -> f32 {
@@ -201,8 +233,10 @@ impl GameState {
     if let Some(clip) = self.vo_bank.get(key) {
       play_sound_once(&clip.sound);
       self.vo_current_key = Some(key.to_string());
+      self.vo_playing_timer = clip.duration;
       clip.duration
     } else {
+      self.vo_playing_timer = 0.0;
       0.0
     }
   }
@@ -316,7 +350,15 @@ impl GameState {
 
   pub fn update(&mut self, ply: &mut Ply, dt: f32) {
     self.time += dt;
+    self.vo_playing_timer = (self.vo_playing_timer - dt).max(0.0);
     self.poll_audio_loading();
+
+    let (goal, fade_secs) = self.desired_music_state();
+    if self.last_music_goal != Some(goal) {
+      self.last_music_goal = Some(goal);
+      self.music.set_goal(goal, fade_secs);
+    }
+    self.music.update(dt, self.vo_playing_timer > 0.0);
 
     // Initialize scroll container to the middle of the void canvas
     if !self.scroll_initialized {

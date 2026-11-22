@@ -4,8 +4,8 @@ mod components;
 mod game;
 mod graph;
 mod physics;
+mod sound;
 mod story;
-mod vo;
 
 use components::NARRATOR_FONT;
 use game::GameState;
