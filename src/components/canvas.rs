@@ -238,18 +238,20 @@ impl GameState {
               let pos = positions[idx];
               let size = node.size;
               let is_selected = selected.map_or(false, |sel| self.same_chain(sel, idx));
+              let is_vo_active = self.vo_active_node == Some(idx);
+              let is_highlighted = is_selected || is_vo_active;
               let is_dragging = dragging == Some(idx);
               let is_head_target = valid_targets.iter().any(|t| *t == ConnectTarget::ToHead(idx));
               let is_tail_target = valid_targets.iter().any(|t| *t == ConnectTarget::FromTail(idx));
 
               let spawn_a = node.spawn_anim.clamp(0.0, 1.0);
-              let bg_color = if is_dragging || is_selected {
+              let bg_color = if is_dragging || is_highlighted {
                 (255u8, 255u8, 255u8, 255u8)
               } else {
                 (255u8, 255u8, 255u8, (250.0 * spawn_a) as u8)
               };
 
-              let border_color = if is_selected {
+              let border_color = if is_highlighted {
                 (224u8, 162u8, 62u8, 255u8)
               } else if is_head_target {
                 (59u8, 130u8, 246u8, 240u8)
@@ -260,7 +262,7 @@ impl GameState {
               };
 
               let text_color = (18u8, 18u8, 22u8, (255.0 * spawn_a) as u8);
-              let z = if is_dragging { 20 } else if is_selected { 15 } else { 10 };
+              let z = if is_dragging { 20 } else if is_highlighted { 15 } else { 10 };
 
               let node_el = ui.element()
                 .id(("mem_node", idx as u32))
@@ -274,7 +276,7 @@ impl GameState {
                 .corner_radius(10.0)
                 .layout(|l| l.direction(TopToBottom).align(CenterX, CenterY).padding((14, 16, 14, 16)).gap(6))
                 .background_color(bg_color)
-                .border(|b| b.all(if is_selected || is_head_target { 2 } else { 1 }).color(border_color));
+                .border(|b| b.all(if is_highlighted || is_head_target { 2 } else { 1 }).color(border_color));
 
               let node_el = if phase == GamePhase::Playing {
                 node_el

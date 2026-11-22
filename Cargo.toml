@@ -4,6 +4,19 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-ply-engine = { git = "https://github.com/TheRedDeveloper/ply-engine", features = ["text-styling"] }
+ply-engine = { git = "https://github.com/TheRedDeveloper/ply-engine", features = ["text-styling", "audio", "png"], default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+[target.'cfg(windows)'.build-dependencies]
+winresource = "0.1"
+
+[package.metadata.android]
+label = "Bitter Taste"
+res = "res"
+icon = "@mipmap/ic_launcher"
+
+[profile.release]
+lto = "thin"
+strip = true
+codegen-units = 1

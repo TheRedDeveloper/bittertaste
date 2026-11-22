@@ -1,5 +1,5 @@
 {
-  "intro_subtitle": "Let me just start from the beginning...",
+  "intro_subtitle": "Let me just start from the {color=#3730A3|beginning}...",
   "starting_nodes": [
     "cafe_shifts",
     "cramped_apartment",
@@ -55,10 +55,10 @@
     "always_know_where",
     "threw_phone_in_river"
   ],
-  "outro_subtitle": "What a piece of shit!",
+  "outro_subtitle": "What a {pulse_a=0.08_f=0.7|{color=#991B1B|{shadow_color=#FECACA_offset=-0.06,0.06|piece of shit}}}!",
   "nodes": {
     "cafe_shifts": {
-      "text": "I worked closing shifts at a café until 9:30 PM and took the bus everywhere because I couldn't afford a car.",
+      "text": "I worked {color=#3730A3|closing shifts} at a café until {color=#3730A3|9:30 PM} and took the bus everywhere because I couldn't afford a car.",
       "is_clean": true,
       "outgoing": {
         "cramped_apartment": "",
@@ -66,7 +66,7 @@
       }
     },
     "cramped_apartment": {
-      "text": "My roommate was always late on rent in our cramped apartment, and I vented most nights to Claire.",
+      "text": "My roommate was always late on rent in our {transform_scale=0.85,1.0|cramped} apartment, and I vented most nights to {color=#0F766E|Claire}.",
       "is_clean": true,
       "outgoing": {
         "cafe_shifts": "",
@@ -74,21 +74,21 @@
       }
     },
     "daniel_regular": {
-      "text": "Daniel worked late nearby and stopped in at 9:15 for hot chocolate. We knew each other from small talk at the counter.",
+      "text": "{color=#4E4440|Daniel} worked late nearby and stopped in at 9:15 for {gradient_stops=0:#2C1608,4:#7C3F18,8:#B87333,12:#2C1608_speed=2.5|hot chocolate}. We knew each other from small talk at the counter.",
       "is_clean": true,
       "outgoing": {
         "missed_last_bus": ""
       }
     },
     "missed_last_bus": {
-      "text": "One freezing, rainy night, closing ran ten minutes late and I missed the last bus with no cash for a cab.",
+      "text": "One {jitter_radii=0.025,0.025|{color=#0369A1|{shadow_color=#BAE6FD_offset=-0.06,0.06|freezing}}}, rainy night, closing ran ten minutes late and I {color=#3730A3|missed} the last bus with no cash for a cab.",
       "is_clean": true,
       "outgoing": {
         "first_ride_home": ""
       }
     },
     "first_ride_home": {
-      "text": "Daniel pulled out of the lot, saw me shivering under the streetlight, and offered a ride since it was on his way.",
+      "text": "{color=#4E4440|Daniel} pulled out of the lot, saw me {jitter_radii=0.03,0.03|{color=#0369A1|shivering}} under the streetlight, and offered a ride since it was on {color=#4E4440|his} way.",
       "is_clean": true,
       "outgoing": {
         "night_pickups": "",
@@ -96,15 +96,15 @@
       }
     },
     "night_pickups": {
-      "text": "He started showing up at 9:25 with hot chocolate in the cupholder so I wouldn't freeze at the bus stop.",
+      "text": "{color=#4E4440|He} started showing up at 9:25 with {gradient_stops=0:#2C1608,4:#7C3F18,8:#B87333,12:#2C1608_speed=2.5|hot chocolate} in the cupholder so I wouldn't {color=#0369A1|freeze} at the bus stop.",
       "is_clean": true,
       "outgoing": {
         "insisted_on_rides": "",
-        "weekend_hugs": "Everything felt so easy back then. Like someone was finally looking out for me."
+        "weekend_hugs": "Everything felt {wave_a=0.06_f=0.4|{color=#B45309|so easy}} back then. Like someone was finally looking out for me."
       }
     },
     "insisted_on_rides": {
-      "text": "When I told him I wanted to walk or take the bus, he wouldn't leave the lot until I got in the car.",
+      "text": "When I told {color=#4E4440|him} I wanted to walk or take the bus, {color=#4E4440|he} {color=#991B1B|wouldn't leave} the lot until I got in the car.",
       "is_clean": false,
       "outgoing": {
         "weekend_hugs": "",
@@ -112,15 +112,15 @@
       }
     },
     "weekend_hugs": {
-      "text": "We started spending weekends together. He always met me at the door with a long, warm hug.",
+      "text": "We started spending weekends together. {color=#4E4440|He} always met me at the door with a long, {wave_a=0.07_f=0.4|{gradient_stops=0:#7C2D12,3:#C2410C,6:#D97706,9:#7C2D12_speed=2.5|warm hug}}.",
       "is_clean": true,
       "outgoing": {
         "moved_in_together": "",
-        "quit_cafe_rest": "Wait... how was I paying rent if I hadn't moved in yet?"
+        "quit_cafe_rest": "{color=#3730A3|Wait...} how was I paying rent if I hadn't moved in yet?"
       }
     },
     "moved_in_together": {
-      "text": "When my roommate moved out and rent spiked, Daniel offered to let me move into his apartment.",
+      "text": "When my roommate moved out and rent {jitter_radii=0.025,0.025|{color=#991B1B|spiked}}, {color=#5E3F3F|Daniel} offered to let me {wave_a=0.06_f=0.4|move into} {color=#5E3F3F|his} apartment.",
       "is_clean": true,
       "outgoing": {
         "no_rent_insistence": "",
@@ -130,7 +130,7 @@
       }
     },
     "no_rent_insistence": {
-      "text": "Even when I offered to split costs, he insisted I didn't need to pay a dime of rent.",
+      "text": "Even when I offered to split costs, {color=#5E3F3F|he} {color=#991B1B|insisted} I didn't need to pay a dime of rent.",
       "is_clean": false,
       "outgoing": {
         "quit_cafe_rest": "",
@@ -138,16 +138,16 @@
       }
     },
     "quit_cafe_rest": {
-      "text": "I quit those exhausting late shifts at the café, and Daniel covered the bills without hesitation so I could finally rest.",
+      "text": "I quit those {color=#3730A3|exhausting} late shifts at the café, and {color=#5E3F3F|Daniel} covered the bills without hesitation so I could {wave_a=0.06_f=0.35|{gradient_stops=0:#7C2D12,4:#B45309,8:#D97706,12:#7C2D12_speed=2|finally rest}}.",
       "is_clean": true,
       "outgoing": {
-        "pushed_to_quit": "I really didn't have to.",
+        "pushed_to_quit": "I {color=#3730A3|really} didn't have to.",
         "stuck_alone_indoors": "",
         "drifted_from_claire": ""
       }
     },
     "pushed_to_quit": {
-      "text": "He kept pushing me to quit the café, saying it was ridiculous for me to work nights when he could pay for everything.",
+      "text": "{color=#5E3F3F|He} kept {color=#991B1B|pushing} me to quit the café, saying it was {swing_a=3_f=0.4|{color=#3730A3|ridiculous}} for me to work nights when {color=#5E3F3F|he} could pay for everything.",
       "is_clean": false,
       "outgoing": {
         "quit_cafe_rest": "",
@@ -156,7 +156,7 @@
       }
     },
     "stuck_alone_indoors": {
-      "text": "With no job and no car, I spent most of my days alone inside his apartment.",
+      "text": "With no job and no car, I spent most of my days {color=#3730A3|alone} inside {color=#5E3F3F|his} apartment.",
       "is_clean": false,
       "outgoing": {
         "drifted_from_claire": "",
@@ -165,16 +165,16 @@
       }
     },
     "drifted_from_claire": {
-      "text": "Life got busy, and Claire and I slowly lost touch.",
+      "text": "Life got busy, and {color=#0F766E|Claire} and I {wave_a=0.06_f=0.35|{color=#3730A3|lost touch}}.",
       "is_clean": true,
       "outgoing": {
-        "called_claire_toxic": "I really agreed with him...",
+        "called_claire_toxic": "I {color=#3730A3|really} agreed with {color=#6E3737|him}...",
         "reading_my_texts": "",
-        "moved_out_of_town": "Those months are kind of a blur..."
+        "moved_out_of_town": "Those months are kind of a {wave_a=0.07_f=0.4|{color=#3730A3|blur}}..."
       }
     },
     "called_claire_toxic": {
-      "text": "Daniel kept calling Claire toxic and draining until I agreed out loud that I was better off without her.",
+      "text": "{color=#6E3737|Daniel} kept calling {color=#0F766E|Claire} {color=#991B1B|toxic} and {color=#991B1B|draining} until I agreed out loud that I was better off without {color=#0F766E|her}.",
       "is_clean": false,
       "outgoing": {
         "reading_my_texts": "",
@@ -183,7 +183,7 @@
       }
     },
     "reading_my_texts": {
-      "text": "He was reading my texts over my shoulder and questioning why I replied to anyone.",
+      "text": "{color=#6E3737|He} was {color=#991B1B|reading} my texts over my shoulder and {color=#991B1B|questioning} why I replied to anyone.",
       "is_clean": false,
       "outgoing": {
         "blocked_bedroom_door": "",
@@ -192,7 +192,7 @@
       }
     },
     "blocked_bedroom_door": {
-      "text": "When I tried to go out anyway, he blocked the bedroom door until I apologized for being ungrateful.",
+      "text": "When I tried to go out anyway, {color=#6E3737|he} {color=#991B1B|{shadow_color=#FECACA_offset=-0.06,0.06|blocked}} the bedroom door until I apologized for being {swing_a=3_f=0.4|{color=#3730A3|ungrateful}}.",
       "is_clean": false,
       "outgoing": {
         "warm_after_canceling": "",
@@ -201,7 +201,7 @@
       }
     },
     "warm_after_canceling": {
-      "text": "The moment I canceled my plans and said sorry, he turned warm again.",
+      "text": "The moment I {color=#991B1B|canceled} my plans and said sorry, {color=#6E3737|he} turned {gradient_stops=0:#7C2D12,2:#C2410C,4:#7C2D12_speed=2|warm} again.",
       "is_clean": false,
       "outgoing": {
         "owed_him_sex": "I really don't want to think about this...",
@@ -209,7 +209,7 @@
       }
     },
     "owed_him_sex": {
-      "text": "Sex became something he was treating like I owed him.",
+      "text": "Sex became something {color=#6E3737|he} was treating like I {color=#991B1B|owed} {color=#6E3737|him}.",
       "is_clean": false,
       "outgoing": {
         "pinned_and_bruised": "",
@@ -217,7 +217,7 @@
       }
     },
     "pinned_and_bruised": {
-      "text": "When I said I was tired or pushed him off, he pinned my wrists and gripped my arms until they bruised.",
+      "text": "When I said I was tired or pushed {color=#7E2D2D|him} off, {color=#7E2D2D|he} {color=#991B1B|pinned} my wrists and {color=#991B1B|gripped} my arms until they {color=#6B21A8|bruised}.",
       "is_clean": false,
       "outgoing": {
         "stopped_fighting_bed": "",
@@ -226,7 +226,7 @@
       }
     },
     "stopped_fighting_bed": {
-      "text": "He didn't stop until I quit fighting and just lay still on the bed.",
+      "text": "{color=#7E2D2D|He} {color=#991B1B|didn't stop} until I quit fighting and just {color=#3730A3|lay still} on the bed.",
       "is_clean": false,
       "outgoing": {
         "hot_chocolate_in_bed": "",
@@ -234,14 +234,14 @@
       }
     },
     "hot_chocolate_in_bed": {
-      "text": "He brought hot chocolate to bed, stroked my hair, and said he only did it out of love.",
+      "text": "{color=#7E2D2D|He} brought {gradient_stops=0:#2C1608,4:#3F3F46,8:#18181B,12:#2C1608_speed=1.5|hot chocolate} to bed, stroked my hair, and said {color=#7E2D2D|he} only did it {swing_a=3_f=0.35|{color=#9A3412|out of love}}.",
       "is_clean": false,
       "outgoing": {
-        "moved_out_of_town": "Was I really just overreacting?"
+        "moved_out_of_town": "Was I really just {color=#3730A3|overreacting}?"
       }
     },
     "moved_out_of_town": {
-      "text": "To get out of the city noise, we moved into a quieter apartment further out of town.",
+      "text": "To get out of the city noise, we moved into a {color=#3730A3|quieter} apartment {color=#3730A3|further out} of town.",
       "is_clean": true,
       "outgoing": {
         "no_bus_only_his_car": "",
@@ -250,7 +250,7 @@
       }
     },
     "no_bus_only_his_car": {
-      "text": "Out there, there were no bus lines and only his car, so if I wanted to leave, Daniel had to drive me.",
+      "text": "Out there, there were {color=#991B1B|no} bus lines and only {color=#7E2D2D|his} car, so if I wanted to leave, {color=#7E2D2D|Daniel} had to drive me.",
       "is_clean": false,
       "outgoing": {
         "phone_repair_offer": "",
@@ -259,17 +259,17 @@
       }
     },
     "phone_repair_offer": {
-      "text": "When my phone broke, Daniel took it to a repair shop so I wouldn't have to worry.",
+      "text": "When my phone broke, {color=#7E2D2D|Daniel} took it to a repair shop so I wouldn't have to {wave_a=0.06_f=0.35|{color=#B45309|worry}}.",
       "is_clean": true,
       "outgoing": {
-        "two_days_to_fix": "Two days for a cracked screen... I never even questioned why it took so long.",
+        "two_days_to_fix": "{color=#3730A3|Two days} for a cracked screen... I never even questioned why it took so long.",
         "secret_job_apply": "",
         "restaurant_proposal": "",
         "city_parents_dinner": ""
       }
     },
     "two_days_to_fix": {
-      "text": "It took him two whole days to \"get it fixed.\"",
+      "text": "It took {color=#7E2D2D|him} {color=#991B1B|two whole days} to {swing_a=2.5_f=0.35|{color=#3730A3|\"get it fixed.\"}}",
       "is_clean": false,
       "outgoing": {
         "secret_job_apply": "",
@@ -277,7 +277,7 @@
       }
     },
     "secret_job_apply": {
-      "text": "I secretly applied for a part-time job on my phone while he was at work.",
+      "text": "I {color=#0369A1|secretly} applied for a part-time job on my phone while {color=#7E2D2D|he} was at work.",
       "is_clean": false,
       "outgoing": {
         "found_out_yelled": "",
@@ -285,7 +285,7 @@
       }
     },
     "found_out_yelled": {
-      "text": "Daniel found out about the application without me telling him. He yelled that I didn't trust him and refused to drive me.",
+      "text": "{color=#8C2222|Daniel} found out about the application without me telling {color=#8C2222|him}. {color=#8C2222|He} {jitter_radii=0.04,0.04|{color=#991B1B|yelled}} that I didn't trust {color=#8C2222|him} and {color=#991B1B|refused} to drive me.",
       "is_clean": false,
       "outgoing": {
         "withdrew_apologized": "",
@@ -293,44 +293,44 @@
       }
     },
     "withdrew_apologized": {
-      "text": "I withdrew the application and apologized, feeling guilty for being ungrateful after all he'd done.",
+      "text": "I withdrew the application and apologized, feeling {color=#3730A3|guilty} for being {swing_a=2.5_f=0.35|{color=#3730A3|ungrateful}} after all {color=#8C2222|he'd} done.",
       "is_clean": false,
       "outgoing": {
         "restaurant_proposal": ""
       }
     },
     "restaurant_proposal": {
-      "text": "He took me out to an expensive restaurant and got down on one knee with a ring. Of course I said yes.",
+      "text": "{color=#8C2222|He} took me out to an {gradient_stops=0:#7C2D12,3:#B45309,6:#D97706,9:#7C2D12_speed=2|expensive} restaurant and got down on one knee with a {gradient_stops=0:#B45309,2:#D97706,4:#B45309_speed=2|ring}. Of course I said {pulse_a=0.08_f=0.6|{color=#B45309|yes}}.",
       "is_clean": true,
       "outgoing": {
-        "forced_yes_in_public": "What else would I have done?",
+        "forced_yes_in_public": "What else would I have {color=#3730A3|done}?",
         "city_parents_dinner": ""
       }
     },
     "forced_yes_in_public": {
-      "text": "The restaurant was packed and every table was watching when he asked. I forced myself to say yes in front of them.",
+      "text": "The restaurant was packed and every table was {pulse_a=0.07_f=0.6|{color=#991B1B|watching}} when {color=#8C2222|he} asked. I {color=#991B1B|forced} myself to say {jitter_radii=0.03,0.03|{color=#991B1B|yes}} in front of them.",
       "is_clean": false,
       "outgoing": {
         "city_parents_dinner": ""
       }
     },
     "city_parents_dinner": {
-      "text": "We drove back into the city for dinner with his parents and stopped at a store for wine and flowers.",
+      "text": "We drove back into the city for dinner with {color=#8C2222|his} parents and stopped at a store for wine and flowers.",
       "is_clean": true,
       "outgoing": {
-        "restaurant_proposal": "No, wait... I was already wearing the ring at that dinner.",
+        "restaurant_proposal": "{color=#3730A3|No, wait...} I was already wearing the ring at that dinner.",
         "claire_grocery_runin": ""
       }
     },
     "claire_grocery_runin": {
-      "text": "Inside the grocery store, we ran into Claire. She asked why I texted months ago to end our friendship.",
+      "text": "Inside the grocery store, we ran into {color=#0F766E|Claire}. {color=#0F766E|She} asked why I texted months ago to {color=#991B1B|end} our friendship.",
       "is_clean": true,
       "outgoing": {
         "never_sent_that_text": ""
       }
     },
     "never_sent_that_text": {
-      "text": "My stomach dropped because I never sent that text. Daniel smiled and told her I was just overwhelmed with wedding planning.",
+      "text": "My {jitter_radii=0.03,0.03|stomach dropped} because I {color=#991B1B|never} sent that text. {color=#8C2222|Daniel} smiled and told {color=#0F766E|her} I was just overwhelmed with wedding planning.",
       "is_clean": false,
       "outgoing": {
         "fingers_digging_side": "",
@@ -339,7 +339,7 @@
       }
     },
     "fingers_digging_side": {
-      "text": "His arm wrapped around my waist, fingers digging into my side to keep me quiet.",
+      "text": "{color=#8C2222|His} arm wrapped around my waist, fingers {jitter_radii=0.04,0.04|{color=#991B1B|digging}} into my side to keep me {color=#991B1B|quiet}.",
       "is_clean": false,
       "outgoing": {
         "claire_saw_bruises": "",
@@ -347,56 +347,56 @@
       }
     },
     "claire_saw_bruises": {
-      "text": "Through my sleeve, I saw Claire staring down at the faded bruises on my wrist.",
+      "text": "Through my sleeve, I saw {color=#0F766E|Claire} staring down at the faded {color=#6B21A8|bruises} on my wrist.",
       "is_clean": false,
       "outgoing": {
         "acted_normal_drive": ""
       }
     },
     "acted_normal_drive": {
-      "text": "On the drive back to the apartment, Daniel acted like nothing had happened.",
+      "text": "On the drive back to the apartment, {color=#8C2222|Daniel} acted like {color=#3730A3|nothing} had happened.",
       "is_clean": false,
       "outgoing": {
         "counter_mugs_hug": ""
       }
     },
     "counter_mugs_hug": {
-      "text": "He set two mugs of hot chocolate on the counter and pulled me into a hug.",
+      "text": "{color=#8C2222|He} set two mugs of {gradient_stops=0:#2C1608,4:#3F3F46,8:#18181B,12:#2C1608_speed=1.5|hot chocolate} on the counter and pulled me into a hug.",
       "is_clean": false,
       "outgoing": {
         "bitter_sip_stomach": ""
       }
     },
     "bitter_sip_stomach": {
-      "text": "Slipping out of his arms, I took a sip, and the sweet chocolate tasted so bitter my stomach turned.",
+      "text": "Slipping out of {color=#8C2222|his} arms, I took a sip, and the {gradient_stops=0:#2C1608,4:#7C3F18,8:#B87333,12:#2C1608_speed=2.5|sweet chocolate} tasted so {jitter_radii=0.04,0.04|{color=#4D5E2A|bitter}} my {jitter_radii=0.03,0.03|{color=#4D5E2A|stomach turned}}.",
       "is_clean": false,
       "outgoing": {
         "awake_left_morning": ""
       }
     },
     "awake_left_morning": {
-      "text": "I lay awake all night. Once he left for work, I packed a bag and called Claire from the main road.",
+      "text": "I lay {color=#3730A3|awake} all night. Once {color=#991B1B|he} left for work, I {color=#0369A1|packed} a bag and called {color=#0F766E|Claire} from the main road.",
       "is_clean": false,
       "outgoing": {
         "river_walk_call": ""
       }
     },
     "river_walk_call": {
-      "text": "While Claire and I walk along the river near her place, Daniel calls.",
+      "text": "While {color=#0F766E|Claire} and I walk along the {wave_a=0.07_f=0.4|{color=#0369A1|river}} near {color=#0F766E|her} place, {color=#991B1B|Daniel} calls.",
       "is_clean": false,
       "outgoing": {
         "always_know_where": ""
       }
     },
     "always_know_where": {
-      "text": "His calm act vanishes: \"I know you called Claire. I always know where you are.\"",
+      "text": "{color=#991B1B|His} calm act vanishes: \"I know you called {color=#0F766E|Claire}. I {color=#991B1B|{shadow_color=#FECACA_offset=-0.06,0.06|always know}} where you are.\"",
       "is_clean": false,
       "outgoing": {
         "threw_phone_in_river": ""
       }
     },
     "threw_phone_in_river": {
-      "text": "I tell him to go to hell, hang up, and throw the phone straight into the river so he can never trace me.",
+      "text": "I tell {color=#991B1B|him} to {color=#991B1B|go to hell}, hang up, and throw the phone straight into the {wave_a=0.08_f=0.5|{color=#0369A1|river}} so {color=#991B1B|he} can {pulse_a=0.06_f=0.6|{color=#0369A1|never}} trace me.",
       "is_clean": false,
       "outgoing": {}
     }
@@ -465,7 +465,7 @@
         "no_rent_insistence",
         "pushed_to_quit"
       ],
-      "subtitle": "Wait... what text?"
+      "subtitle": "{color=#3730A3|Wait...} what {color=#991B1B|text}?"
     },
     {
       "when_same_chain": [

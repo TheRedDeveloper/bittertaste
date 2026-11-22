@@ -78,16 +78,16 @@ impl GameState {
           let is_midpoint_lit = selected.map_or(false, |sel| self.can_insert_midpoint(sel, a, b));
           let is_chain_hovered = ui.pointer_over(("chain", chain_key(a, b))) && self.phase == GamePhase::Playing;
           let is_selected_chain = selected.map_or(false, |sel| self.same_chain(sel, a));
-          let col = if is_midpoint_lit {
-            MacroquadColor::new(0.23, 0.51, 0.96, 1.0)
+          let (col, thickness) = if is_midpoint_lit {
+            (MacroquadColor::new(0.08, 0.42, 1.0, 1.0), 3.5)
           } else if is_chain_hovered {
-            MacroquadColor::new(0.90, 0.22, 0.24, 1.0)
+            (MacroquadColor::new(0.90, 0.22, 0.24, 1.0), 1.5)
           } else if is_selected_chain {
-            MacroquadColor::new(0.88, 0.64, 0.24, 1.0)
+            (MacroquadColor::new(0.88, 0.64, 0.24, 1.0), 1.5)
           } else {
-            MacroquadColor::new(0.42, 0.42, 0.46, 1.0)
+            (MacroquadColor::new(0.42, 0.42, 0.46, 1.0), 1.5)
           };
-          draw_line(p1.x, p1.y, p2.x, p2.y, 1.5, col);
+          draw_line(p1.x, p1.y, p2.x, p2.y, thickness, col);
         }
       }
 

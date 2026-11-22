@@ -1,8 +1,11 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 mod components;
 mod game;
 mod graph;
 mod physics;
 mod story;
+mod vo;
 
 use components::NARRATOR_FONT;
 use game::GameState;
@@ -17,6 +20,11 @@ fn window_conf() -> macroquad::conf::Conf {
       window_height: 720,
       high_dpi: true,
       sample_count: 4,
+      icon: Some(miniquad::conf::Icon {
+        small: *include_bytes!("../assets/images/icon_16.rgba"),
+        medium: *include_bytes!("../assets/images/icon_32.rgba"),
+        big: *include_bytes!("../assets/images/icon_64.rgba"),
+      }),
       platform: miniquad::conf::Platform {
         webgl_version: miniquad::conf::WebGLVersion::WebGL2,
         ..Default::default()
@@ -34,6 +42,7 @@ async fn main() {
   let mut ply = Ply::new(&NARRATOR_FONT).await;
   let story = StoryData::load();
   let mut state = GameState::new(story);
+  state.start_audio_loading();
 
   loop {
     clear_background(BLACK);

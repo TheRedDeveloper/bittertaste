@@ -122,6 +122,9 @@ impl GameState {
         self.connect_pair(tail, b);
       }
     }
+    if let Some(sound) = &self.connect_sound {
+      play_sound_once(sound);
+    }
     self.check_triggers();
     self.check_outro_trigger();
   }
@@ -136,6 +139,8 @@ impl GameState {
 
     if !subtitle.trim().is_empty() {
       self.set_immediate_subtitle(subtitle);
+      let vo_key = format!("sub_{}__{}", self.nodes[from].id, self.nodes[to].id);
+      self.play_vo(&vo_key);
     }
   }
 
@@ -323,6 +328,7 @@ impl GameState {
       if let Some(sub) = subtitle {
         if !sub.trim().is_empty() {
           self.push_subtitle(sub);
+          self.play_vo("sub_trigger_what_text");
         }
       }
     }
@@ -333,12 +339,17 @@ impl GameState {
       return;
     }
     let chains = self.collect_all_chains();
-    let matched = chains.iter().any(|chain| {
+    let matched_chain = chains.iter().find(|chain| {
       Self::matches_steps_at(chain, 0, &self.story.outro_trigger_chain) == Some(chain.len())
     });
-    if !matched {
+    let Some(matched_ids) = matched_chain else {
       return;
-    }
+    };
+
+    let chain_indices: Vec<usize> = matched_ids
+      .iter()
+      .filter_map(|id| self.id_to_idx.get(*id).copied())
+      .collect();
 
     // Full true chronological chain assembled -> enter read-only OutroReady state
     self.phase = GamePhase::OutroReady;
@@ -347,6 +358,13 @@ impl GameState {
     self.dragging = None;
     self.hover_preview = None;
     self.set_immediate_subtitle(self.story.outro_subtitle.clone());
+
+    let outro_dur = self.play_vo("outro_subtitle");
+    self.vo_chain_queue = chain_indices;
+    self.vo_chain_pos = 0;
+    self.vo_active_node = None;
+    self.vo_in_pause = true;
+    self.vo_timer = outro_dur + 0.45;
   }
 
   pub fn link_count(&self) -> usize {

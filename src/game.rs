@@ -1,6 +1,9 @@
+use crate::physics::ClusterPhysics;
 use crate::story::{MemoryNodeDef, StoryData};
+use crate::vo::{LoadedAudio, VoiceOverBank, spawn_audio_loading_jobs};
 use ply_engine::prelude::*;
 use std::collections::HashMap;
+use std::sync::mpsc::Receiver;
 
 pub const CANVAS_W: f32 = 3200.0;
 pub const CANVAS_H: f32 = 3200.0;
@@ -9,7 +12,7 @@ pub const DEFAULT_NODE_H: f32 = 96.0;
 pub const CHAIN_H: f32 = 26.0;
 pub const CHAIN_TILE_W: f32 = CHAIN_H * 4.0; // 512x2048 rotated 90 deg -> 1:4 aspect
 pub const CHAIN_GAP_X: f32 = 88.0;
-pub const CHAIN_GAP_Y: f32 = 44.0;
+pub const CHAIN_GAP_Y: f32 = 67.0;
 pub const DRAG_THRESHOLD: f32 = 6.0;
 pub const SUBTITLE_DURATION: f32 = 4.5;
 pub const TYPE_CHAR_DURATION: f32 = 0.032;
@@ -40,6 +43,7 @@ pub struct NodeState {
   pub outgoing: Option<usize>,
   pub spawn_anim: f32, // 0.0 -> 1.0 fade/pulse in
   pub drift_phase: f32,
+  pub weight: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -104,6 +108,19 @@ pub struct GameState {
   pub shards: Vec<ChainShard>,
 
   pub canvas_origin: Vec2,
+  pub clusters: HashMap<Vec<usize>, ClusterPhysics>,
+
+  // Embedded sound effects & voice-over
+  pub connect_sound: Option<Sound>,
+  pub break_sound: Option<Sound>,
+  pub vo_bank: VoiceOverBank,
+  pub vo_current_key: Option<String>,
+  pub vo_chain_queue: Vec<usize>,
+  pub vo_chain_pos: usize,
+  pub vo_active_node: Option<usize>,
+  pub vo_timer: f32,
+  pub vo_in_pause: bool,
+  pub audio_rx: Option<Receiver<LoadedAudio>>,
 }
 
 impl GameState {
@@ -130,9 +147,64 @@ impl GameState {
       finale_timer: 0.0,
       shards: Vec::new(),
       canvas_origin: Vec2::ZERO,
+      clusters: HashMap::new(),
+      connect_sound: None,
+      break_sound: None,
+      vo_bank: VoiceOverBank::default(),
+      vo_current_key: None,
+      vo_chain_queue: Vec::new(),
+      vo_chain_pos: 0,
+      vo_active_node: None,
+      vo_timer: 0.0,
+      vo_in_pause: false,
+      audio_rx: None,
     };
     state.reset_world();
     state
+  }
+
+  pub fn start_audio_loading(&mut self) {
+    self.audio_rx = Some(spawn_audio_loading_jobs());
+  }
+
+  fn poll_audio_loading(&mut self) {
+    if let Some(rx) = &self.audio_rx {
+      while let Ok(item) = rx.try_recv() {
+        match item {
+          LoadedAudio::Connect(sound) => self.connect_sound = Some(sound),
+          LoadedAudio::Break(sound) => self.break_sound = Some(sound),
+          LoadedAudio::Vo(key, clip) => self.vo_bank.insert(key, clip),
+        }
+      }
+    }
+  }
+
+  pub fn stop_vo(&mut self) {
+    if let Some(key) = self.vo_current_key.take() {
+      if let Some(clip) = self.vo_bank.get(&key) {
+        stop_sound(&clip.sound);
+      }
+    }
+    self.vo_active_node = None;
+    self.vo_chain_queue.clear();
+    self.vo_chain_pos = 0;
+    self.vo_timer = 0.0;
+    self.vo_in_pause = false;
+  }
+
+  pub fn play_vo(&mut self, key: &str) -> f32 {
+    if let Some(prev) = self.vo_current_key.take() {
+      if let Some(clip) = self.vo_bank.get(&prev) {
+        stop_sound(&clip.sound);
+      }
+    }
+    if let Some(clip) = self.vo_bank.get(key) {
+      play_sound_once(&clip.sound);
+      self.vo_current_key = Some(key.to_string());
+      clip.duration
+    } else {
+      0.0
+    }
   }
 
   fn reset_world(&mut self) {
@@ -148,6 +220,8 @@ impl GameState {
     self.relief_fade = 0.0;
     self.finale_timer = 0.0;
     self.shards.clear();
+    self.clusters.clear();
+    self.stop_vo();
     self.scroll_initialized = false;
 
     let mut ids: Vec<String> = self.story.nodes.keys().cloned().collect();
@@ -181,6 +255,7 @@ impl GameState {
         outgoing: None,
         spawn_anim: if starts_visible { 1.0 } else { 0.0 },
         drift_phase: idx as f32 * 1.37,
+        weight: 1.0,
       });
     }
   }
@@ -214,6 +289,9 @@ impl GameState {
     let angle = diff.y.atan2(diff.x);
     self.disconnect_pair(a, b);
     self.spawn_chain_shards(mid, angle);
+    if let Some(sound) = &self.break_sound {
+      play_sound_once(sound);
+    }
   }
 
   fn screen_to_canvas(&self, ply: &Ply, screen: Vec2) -> Vec2 {
@@ -238,6 +316,7 @@ impl GameState {
 
   pub fn update(&mut self, ply: &mut Ply, dt: f32) {
     self.time += dt;
+    self.poll_audio_loading();
 
     // Initialize scroll container to the middle of the void canvas
     if !self.scroll_initialized {
@@ -274,6 +353,7 @@ impl GameState {
         if ply.is_just_released("begin_btn") && ply.pointer_over("begin_btn") {
           self.phase = GamePhase::Playing;
           self.set_immediate_subtitle(self.story.intro_subtitle.clone());
+          self.play_vo("intro_subtitle");
         }
       }
       GamePhase::Ended => {
@@ -281,6 +361,7 @@ impl GameState {
           self.reset_world();
           self.phase = GamePhase::Playing;
           self.set_immediate_subtitle(self.story.intro_subtitle.clone());
+          self.play_vo("intro_subtitle");
         }
       }
       GamePhase::Playing | GamePhase::OutroReady | GamePhase::Finale => {
@@ -317,9 +398,36 @@ impl GameState {
 
         if self.phase == GamePhase::OutroReady {
           if ply.is_just_released("break_free_btn") && ply.pointer_over("break_free_btn") {
+            self.stop_vo();
             self.phase = GamePhase::Finale;
             self.finale_timer = 0.0;
             self.subtitle_queue.clear();
+          } else if !self.vo_chain_queue.is_empty() {
+            self.vo_timer -= dt;
+            if self.vo_timer <= 0.0 {
+              if self.vo_in_pause {
+                if self.vo_chain_pos < self.vo_chain_queue.len() {
+                  let node_idx = self.vo_chain_queue[self.vo_chain_pos];
+                  let node_id = self.nodes[node_idx].id.clone();
+                  let dur = self.play_vo(&node_id);
+                  self.vo_active_node = Some(node_idx);
+                  self.vo_in_pause = false;
+                  self.vo_timer = dur;
+                } else {
+                  self.vo_active_node = None;
+                  self.vo_chain_queue.clear();
+                }
+              } else {
+                self.vo_active_node = None;
+                self.vo_chain_pos += 1;
+                if self.vo_chain_pos < self.vo_chain_queue.len() {
+                  self.vo_in_pause = true;
+                  self.vo_timer = 0.4;
+                } else {
+                  self.vo_chain_queue.clear();
+                }
+              }
+            }
           }
         }
 
